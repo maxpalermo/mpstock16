@@ -153,13 +153,13 @@ class AdminMpStockMovementsController extends ModuleAdminController
         ];
 
         $this->page_header_toolbar_btn['new_movement'] = [
-            'href' => static::$currentIndex . '&add' . $this->table . '&token=' . $this->token,
+            'href' => 'javascript:showPanelNewMovements();',
             'desc' => $this->l('Nuovo movimento'),
-            'icon' => 'process-icon-new',
+            'icon' => 'process-icon-list',
         ];
 
         $this->page_header_toolbar_btn['import_orders'] = [
-            'href' => static::$currentIndex . '&action=importOrders&token=' . $this->token,
+            'href' => 'javascript:showImportPanel();',
             'desc' => $this->l('Importa ordini'),
             'icon' => 'process-icon-download',
             'confirm' => $this->l('Sei sicuro di voler importare gli ordini?'),
@@ -170,20 +170,43 @@ class AdminMpStockMovementsController extends ModuleAdminController
 
     public function initContent()
     {
-        $this->content .= $this->getScript();
+        $tpl_path = $this->module->getLocalPath() . 'views/templates/admin/AdminMpStockMovements.tpl';
+        $tpl = $this->context->smarty->createTemplate($tpl_path, $this->context->smarty);
+        $tpl->assign([
+            'tpl_dir' => $this->module->getLocalPath() . 'views/templates/',
+            'module' => $this->module->name,
+            'ajax_controller' => $this->context->link->getAdminLink('AdminMpStockMovements'),
+        ]);
+        $this->content = $tpl->fetch();
 
         return parent::initContent();
     }
 
     public function postProcess()
     {
+        if (Tools::isSubmit('fetch')) {
+            $data = file_get_contents('php://input');
+            if ($data) {
+                $data = json_decode($data, true);
+                if (isset($data['action'])) {
+                    try {
+                        $this->response($this->{'ajaxProcess' . Tools::ucfirst($data['action'])}());
+                    } catch (\Throwable $th) {
+                        $this->response([
+                            'error' => $th->getMessage(),
+                        ]);
+                    }
+                }
+            }
+        }
+
         return parent::postProcess();
     }
 
-    public function processImportOrders()
+    public function processimportOrdersDetails()
     {
-        $class = new ImportOrders();
-        $result = $class->importOrders([]);
+        $class = new importOrdersDetails();
+        $result = $class->importOrdersDetails([]);
         if ($result['errors']) {
             foreach ($result['errors'] as $error) {
                 $this->errors[] = $error;
@@ -206,15 +229,6 @@ class AdminMpStockMovementsController extends ModuleAdminController
     public function renderForm()
     {
         return parent::renderForm();
-    }
-
-    protected function getScript()
-    {
-        $tpl_path = $this->module->getLocalPath() . 'views/templates/admin/scripts/confirmations.tpl';
-        $tpl = $this->context->smarty->createTemplate($tpl_path, $this->context->smarty);
-        $tpl->assign('confirmations', $this->confirmations);
-
-        return $tpl->fetch();
     }
 
     protected function getMvtSigns()
@@ -376,5 +390,33 @@ class AdminMpStockMovementsController extends ModuleAdminController
         }
 
         return Tools::strtoupper(trim($comb));
+    }
+
+    protected function response($params)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        ob_clean();
+        exit(json_encode($params));
+    }
+
+    public function ajaxProcessGetOrdersDetails()
+    {
+        $class = new ImportOrdersDetails();
+        $result = $class->getOrdersDetails();
+
+        $this->response($result);
+    }
+
+    public function ajaxProcessImportOrdersDetails()
+    {
+        $data = file_get_contents('php://input');
+        $data = json_decode($data, true);
+        $class = new ImportOrdersDetails();
+        $result = $class->importOrdersDetails($data['ordersDetails']);
+
+        $this->response([
+            'success' => $result['success'],
+            'errors' => $result['errors'],
+        ]);
     }
 }

@@ -101,12 +101,115 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         parent::__construct();
     }
 
+    protected function response($params)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        ob_clean();
+        exit(json_encode($params));
+    }
+
+    public function setMedia()
+    {
+        parent::setMedia();
+
+        $this->addJqueryUI('ui.datepicker');
+        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/showToastify.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/css/style.css');
+    }
+
     public function renderList()
     {
-        $this->addRowAction('edit');
-        $this->addRowAction('delete');
+        // $this->addRowAction('edit');
+        // $this->addRowAction('delete');
 
-        return parent::renderList();
+        // return parent::renderList();
+
+        return false;
+    }
+
+    public function initContent()
+    {
+        $tpl = $this->context->smarty->createTemplate(
+            $this->getTemplatePath() . 'dataTables/documents.tpl',
+            $this->context->smarty
+        );
+
+        $params = [
+            'admin_controller_url' => $this->context->link->getAdminLink('AdminMpStockDocuments'),
+            'mvtReasons' => $this->mvtReasons,
+            'suppliers' => $this->suppliers,
+            'employees' => $this->employees,
+        ];
+
+        $tpl->assign($params);
+
+        $page = $tpl->fetch();
+
+        $this->content = $page;
+
+        return parent::initContent();
+    }
+
+    public function ajaxProcessGetDocuments()
+    {
+        $start = (int) Tools::getValue('start');
+        $length = (int) Tools::getValue('length');
+        $search = Tools::getValue('search')['value'];
+        $draw = (int) Tools::getValue('draw');
+        $columns = Tools::getValue('columns');
+        $order = Tools::getValue('order');
+
+        $model = new ModelMpStockDocument();
+        $documents = $model->dataTable($start, $length, $columns, $order);
+
+        $this->response(
+            [
+                'draw' => $draw,
+                'recordsTotal' => $documents['totalRecords'],
+                'recordsFiltered' => $documents['totalFiltered'],
+                'data' => $documents['data'],
+            ]
+        );
+    }
+
+    public function ajaxProcessGetInvoiceDetails()
+    {
+        $data = file_get_contents('php://input');
+        $data = json_decode($data, true);
+        $id_invoice = (int) $data['id_invoice'];
+
+        $movements = ModelMpStockMovement::getMovementsByIdDocument($id_invoice);
+        $tpl = $this->context->smarty->createTemplate(
+            $this->getTemplatePath() . 'dataTables/document-details.tpl',
+            $this->context->smarty
+        );
+
+        $params = [
+            'movements' => $movements,
+            'mvtReasons' => $this->mvtReasons,
+            'suppliers' => $this->suppliers,
+            'employees' => $this->employees,
+            'id_invoice' => $id_invoice,
+            'id_document' => $id_invoice,
+            'admin_controller_url' => $this->context->link->getAdminLink('AdminMpStockDocuments'),
+        ];
+
+        $tpl->assign($params);
+
+        $table = $tpl->fetch();
+
+        return $this->response(
+            [
+                'id_invoice' => $id_invoice,
+                'id_document' => $id_invoice,
+                'movements' => $movements,
+                'content' => $table,
+            ]
+        );
     }
 
     public function renderForm()

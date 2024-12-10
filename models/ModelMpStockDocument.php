@@ -47,4 +47,84 @@ class ModelMpStockDocument extends ObjectModel
             'date_upd' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => true],
         ],
     ];
+
+    public function countAllResults()
+    {
+        $db = Db::getInstance();
+        $sql = 'SELECT COUNT(*) as total FROM ' . _DB_PREFIX_ . 'mpstock_document';
+        $result = (int) $db->getValue($sql);
+
+        return $result;
+    }
+
+    public function dataTable($offset = 0, $limit = 0, $columns = null, $order = null)
+    {
+        $table = self::$definition['table'];
+        $primary = self::$definition['primary'];
+        $id_lang = (int) Context::getContext()->language->id;
+        $id_shop = (int) Context::getContext()->shop->id;
+
+        $count = $this->countAllResults();
+        $filtered = false;
+        $ordered = false;
+
+        $db = Db::getInstance();
+        $builder = new DbQuery();
+
+        $builder
+            ->select('SQL_CALC_FOUND_ROWS a.*,m.name as mvt_reason,CONCAT(e.firstname, " ", e.lastname) as employee, s.name as supplier, 0 as checkbox')
+            ->from($table, 'a')
+            ->leftJoin('mpstock_mvt_reason_lang', 'm', 'a.id_mpstock_mvt_reason = m.id_mpstock_mvt_reason and m.id_lang = ' . (int) $id_lang)
+            ->leftJoin('employee', 'e', 'a.id_employee = e.id_employee')
+            ->leftJoin('supplier', 's', 'a.id_supplier = s.id_supplier');
+
+        if ($columns) {
+            foreach ($columns as $key => $column) {
+                if ($column['search']['value'] != '' && $columns[$key]['searchable'] == 'true') {
+                    $builder->where($column['name'] . ' LIKE "%' . $column['search']['value'] . '%"');
+                    $filtered = true;
+
+                    continue;
+                }
+            }
+        }
+
+        if ($order) {
+            foreach ($order as $item) {
+                $id_column = (int) $item['column'];
+                $term = $columns[$id_column]['name'];
+                $dir = $item['dir'];
+
+                if ($columns[$id_column]['orderable'] == 'false') {
+                    continue;
+                }
+
+                $builder->orderBy("{$term} {$dir}");
+                $ordered = true;
+            }
+        }
+
+        if (!$ordered) {
+            $builder
+                ->orderBy('id_mpstock_movement DESC');
+        }
+
+        $builder->limit($limit, $offset);
+
+        $query = $builder->build();
+        $result = $db->executeS($query);
+        $filtered_rows = (int) $db->getValue('SELECT FOUND_ROWS()');
+
+        if ($result) {
+            foreach ($result as &$row) {
+                $row['actions'] = '';
+            }
+        }
+
+        return [
+            'totalRecords' => $count,
+            'totalFiltered' => $filtered ? $filtered_rows : $count,
+            'data' => $result,
+        ];
+    }
 }

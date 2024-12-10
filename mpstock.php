@@ -274,18 +274,93 @@ class MpStock extends Module
 
             return $tab->delete();
         }
-    }
 
-    public function hookDisplayBackOfficeHeader()
-    {
-        $ctrl = $this->context->controller;
-        if ($ctrl instanceof AdminController && method_exists($ctrl, 'addCss')) {
-            $ctrl->addCss($this->_path . 'views/css/icon-menu.css');
-        }
+        return true;
     }
 
     public function hookDisplayAdminProductsExtra()
     {
-        return $this->smarty->fetch($this->getAdminTemplatePath() . 'hookDisplayAdminProductExtra.tpl');
+        return '';
+    }
+
+    public function hookactionAdminControllerSetMedia($params)
+    {
+        /** @var ModuleAdminController */
+        $controller = $this->context->controller;
+        $controller->addCSS($this->getLocalPath() . 'views/css/icon-menu.css', 'all', 1001);
+    }
+
+    public function hookActionObjectOrderDetailAddAfter($params)
+    {
+        $object = $params['object'];
+        $importClass = new importOrdersDetails();
+        $record = $importClass->getOrderDetail($object->getFields(), importOrdersDetails::MOVEMENT_WEB_SELL);
+        $model = new ModelMpStockMovement();
+        $model->hydrate($record);
+
+        try {
+            $model->date_add = date('Y-m-d H:i:s');
+            $res = $model->add(false, true);
+            if (!$res) {
+                /** @var ModuleAdminController */
+                $controller = $this->context->controller;
+                $controller->errors[] = Db::getInstance()->getMsgError();
+            }
+        } catch (\Throwable $th) {
+            /** @var ModuleAdminController */
+            $controller = $this->context->controller;
+            $controller->errors[] = $th->getMessage();
+            $res = false;
+        }
+    }
+
+    public function hookActionObjectOrderDetailUpdateAfter($params)
+    {
+        $object = $params['object'];
+        $importClass = new importOrdersDetails();
+        $record = $importClass->getOrderDetail($object->getFields(), importOrdersDetails::MOVEMENT_WEB_SELL);
+        $model = ModelMpStockMovement::getObjectByIdOrderDetail($object->id);
+        if ($model) {
+            $model->hydrate($record);
+            $model->date_add = date('Y-m-d H:i:s');
+        } else {
+            $model = new ModelMpStockMovement();
+            $model->hydrate($record);
+        }
+
+        try {
+            $res = $model->save(true, false);
+            if (!$res) {
+                /** @var ModuleAdminController */
+                $controller = $this->context->controller;
+                $controller->errors[] = Db::getInstance()->getMsgError();
+            }
+        } catch (\Throwable $th) {
+            /** @var ModuleAdminController */
+            $controller = $this->context->controller;
+            $controller->errors[] = $th->getMessage();
+            $res = false;
+        }
+    }
+
+    public function hookActionObjectOrderDetailDeleteAfter($params)
+    {
+        $object = $params['object'];
+        $model = ModelMpStockMovement::getObjectByIdOrderDetail($object->id);
+        if ($model) {
+            try {
+                $res = $model->delete();
+                if (!$res) {
+                    /** @var ModuleAdminController */
+                    $controller = $this->context->controller;
+                    $controller->errors[] = Db::getInstance()->getMsgError();
+                }
+            } catch (\Throwable $th) {
+                /** @var ModuleAdminController */
+                $controller = $this->context->controller;
+                $controller->errors[] = $th->getMessage();
+                $res = false;
+            }
+        }
     }
 }
