@@ -47,93 +47,6 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $this->_join = 'LEFT JOIN ' . _DB_PREFIX_ . 'mpstock_document d ON (a.id_document = d.id_mpstock_document)';
         $this->_join .= ' LEFT JOIN ' . _DB_PREFIX_ . 'product_lang pl ON (a.id_product = pl.id_product AND pl.id_lang = ' . (int) $this->context->language->id . ')';
 
-        $this->fields_list = [
-            'id_mpstock_product' => [
-                'title' => $this->l('ID'),
-                'align' => 'center',
-                'class' => 'fixed-width-xs',
-            ],
-            'number_document' => [
-                'title' => $this->l('Numero'),
-                'filter_key' => 'd!number_document',
-            ],
-            'date_document' => [
-                'title' => $this->l('Data'),
-                'filter_key' => 'd!date_document',
-            ],
-            'id_mpstock_mvt_reason' => [
-                'title' => $this->l('Movimento'),
-                'type' => 'select',
-                'list' => $this->mvtReasons,
-                'filter_key' => 'a!id_mpstock_mvt_reason',
-                'callback' => 'getMvtReasonName',
-            ],
-            'id_order' => [
-                'title' => $this->l('Ordine'),
-                'filter_key' => 'a!id_order',
-            ],
-            'id_order_detail' => [
-                'title' => $this->l('Riga ordine'),
-                'filter_key' => 'a!id_order_detail',
-            ],
-            'reference' => [
-                'title' => $this->l('Riferimento'),
-                'filter_key' => 'a!reference',
-                'remove_onclick' => true,
-            ],
-            'product_name' => [
-                'title' => $this->l('Prodotto'),
-                'filter_key' => 'pl!name',
-            ],
-            'id_product_attribute' => [
-                'title' => $this->l('Combinazione'),
-                'search' => false,
-                'callback' => 'getCombination',
-            ],
-            'ean13' => [
-                'title' => $this->l('EAN13'),
-                'remove_onclick' => true,
-            ],
-            'physical_quantity' => [
-                'title' => $this->l('Magazzino'),
-                'float' => true,
-                'align' => 'text-right',
-                'callback' => 'getStockQuantity',
-            ],
-            'usable_quantity' => [
-                'title' => $this->l('Quantità'),
-                'float' => true,
-                'align' => 'text-right',
-                'callback' => 'getSignQuantity',
-            ],
-            'remain' => [
-                'title' => $this->l('Giacenza'),
-                'float' => true,
-                'search' => false,
-                'align' => 'text-right',
-                'callback' => 'getRemainQuantity',
-            ],
-            'price_te' => [
-                'title' => $this->l('Prezzo (i.e.)'),
-                'type' => 'price',
-                'align' => 'text-right',
-            ],
-            'date_add' => [
-                'title' => $this->l('Data inserimento'),
-                'align' => 'text-center',
-                'filter_key' => 'a!date_add',
-                'order_by' => true,
-                'order_way' => 'DESC',
-            ],
-        ];
-
-        $this->bulk_actions = [
-            'delete' => [
-                'text' => $this->l('Delete selected'),
-                'confirm' => $this->l('Delete selected items?'),
-            ],
-        ];
-
         parent::__construct();
     }
 
@@ -141,7 +54,17 @@ class AdminMpStockMovementsController extends ModuleAdminController
     {
         parent::setMedia();
 
-        $this->addCSS($this->module->getLocalPath() . 'views/css/style.css', 'all', 1000);
+        parent::setMedia();
+
+        $this->addJqueryUI('ui.datepicker');
+        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/showToastify.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/css/style.css');
+        $this->addJqueryPlugin('autocomplete');
+        $this->addJqueryUI('ui.autocomplete');
     }
 
     public function initPageHeaderToolbar()
@@ -170,14 +93,23 @@ class AdminMpStockMovementsController extends ModuleAdminController
 
     public function initContent()
     {
-        $tpl_path = $this->module->getLocalPath() . 'views/templates/admin/AdminMpStockMovements.tpl';
-        $tpl = $this->context->smarty->createTemplate($tpl_path, $this->context->smarty);
-        $tpl->assign([
-            'tpl_dir' => $this->module->getLocalPath() . 'views/templates/',
-            'module' => $this->module->name,
-            'ajax_controller' => $this->context->link->getAdminLink('AdminMpStockMovements'),
-        ]);
-        $this->content = $tpl->fetch();
+        $tpl = $this->context->smarty->createTemplate(
+            $this->getTemplatePath() . 'dataTables/movements.tpl',
+            $this->context->smarty
+        );
+
+        $params = [
+            'admin_controller_url' => $this->context->link->getAdminLink('AdminMpStockMovements'),
+            'mvtReasons' => $this->mvtReasons,
+            'suppliers' => $this->suppliers,
+            'employees' => $this->employees,
+        ];
+
+        $tpl->assign($params);
+
+        $page = $tpl->fetch();
+
+        $this->content = $page;
 
         return parent::initContent();
     }
@@ -218,14 +150,6 @@ class AdminMpStockMovementsController extends ModuleAdminController
         }
     }
 
-    public function renderList()
-    {
-        $this->addRowAction('edit');
-        $this->addRowAction('delete');
-
-        return parent::renderList();
-    }
-
     public function renderForm()
     {
         return parent::renderForm();
@@ -251,18 +175,17 @@ class AdminMpStockMovementsController extends ModuleAdminController
     {
         $id_lang = (int) $this->context->language->id;
         $sql = new DbQuery();
-        $sql->select('*')
-            ->from('mpstock_mvt_reason_lang')
-            ->where('id_lang = ' . $id_lang)
-            ->orderBy('name ASC');
+        $sql->select('a.id_mpstock_mvt_reason, a.sign, b.name')
+            ->from('mpstock_mvt_reason', 'a')
+            ->leftJoin('mpstock_mvt_reason_lang', 'b', 'a.id_mpstock_mvt_reason = b.id_mpstock_mvt_reason and b.id_lang=' . (int) $this->context->language->id)
+            ->orderBy('b.name ASC');
 
         $result = Db::getInstance()->executeS($sql);
-        $out = [];
-        foreach ($result as $row) {
-            $out[$row['id_mpstock_mvt_reason']] = $row['name'];
+        if (!$result) {
+            return [];
         }
 
-        return $out;
+        return $result;
     }
 
     protected function getSuppliers()
@@ -276,7 +199,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $result = Db::getInstance()->executeS($sql);
         $out = [];
         foreach ($result as $row) {
-            $out[$row['id_supplier']] = $row['name'];
+            $out[$row['id_supplier']] = $row;
         }
 
         return $out;
@@ -293,7 +216,8 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $result = Db::getInstance()->executeS($sql);
         $out = [];
         foreach ($result as $row) {
-            $out[$row['id_employee']] = $row['lastname'] . ' ' . $row['firstname'];
+            $row['name'] = $row['lastname'] . ' ' . $row['firstname'];
+            $out[$row['id_employee']] = $row;
         }
 
         return $out;
@@ -418,5 +342,134 @@ class AdminMpStockMovementsController extends ModuleAdminController
             'success' => $result['success'],
             'errors' => $result['errors'],
         ]);
+    }
+
+    public function ajaxProcessGetMovements()
+    {
+        $start = (int) Tools::getValue('start');
+        $length = (int) Tools::getValue('length');
+        $search = Tools::getValue('search')['value'];
+        $draw = (int) Tools::getValue('draw');
+        $columns = Tools::getValue('columns');
+        $order = Tools::getValue('order');
+
+        $model = new ModelMpStockMovement();
+        $movements = $model->dataTable($start, $length, $columns, $order);
+
+        foreach ($movements['data'] as &$row) {
+            $row['product_name'] = ModelMpStockMovement::getProductNameById($row['id_product']);
+            $row['product_combination'] = ModelMpStockMovement::getProductCombinationById($row['id_product'], $row['id_product_attribute']);
+            $row['actions'] = '';
+        }
+
+        $this->response(
+            [
+                'draw' => $draw,
+                'recordsTotal' => $movements['totalRecords'],
+                'recordsFiltered' => $movements['totalFiltered'],
+                'data' => $movements['data'],
+            ]
+        );
+    }
+
+    public function ajaxProcessSearchTermProduct()
+    {
+        $term = Tools::getValue('term');
+        $sql = new DbQuery();
+        $sql->select('p.id_product as value, pl.name as label')
+            ->from('product', 'p')
+            ->leftJoin('product_lang', 'pl', 'p.id_product = pl.id_product AND pl.id_lang = ' . (int) $this->context->language->id)
+            ->where('p.reference LIKE "%' . pSQL($term) . '%" OR pl.name LIKE "%' . pSQL($term) . '%"')
+            ->limit(10);
+
+        $result = Db::getInstance()->executeS($sql);
+
+        $this->response($result);
+    }
+
+    public function ajaxProcessGetProductAttributes()
+    {
+        $id_product = (int) Tools::getValue('productId');
+        $sql = new DbQuery();
+        $sql->select('pa.id_product_attribute as value, GROUP_CONCAT(CONCAT(agl.name, ":", al.name) SEPARATOR ", ") as label')
+            ->from('product_attribute', 'pa')
+            ->leftJoin('product_attribute_combination', 'pac', 'pa.id_product_attribute = pac.id_product_attribute')
+            ->leftJoin('attribute', 'a', 'pac.id_attribute = a.id_attribute')
+            ->leftJoin('attribute_lang', 'al', 'a.id_attribute = al.id_attribute AND al.id_lang = ' . (int) $this->context->language->id)
+            ->leftJoin('attribute_group', 'ag', 'a.id_attribute_group = ag.id_attribute_group')
+            ->leftJoin('attribute_group_lang', 'agl', 'ag.id_attribute_group = agl.id_attribute_group AND agl.id_lang = ' . (int) $this->context->language->id)
+            ->where('pa.id_product = ' . $id_product)
+            ->groupBy('pa.id_product_attribute')
+            ->orderBy('pa.id_product_attribute ASC');
+
+        $result = Db::getInstance()->executeS($sql);
+
+        $this->response($result);
+    }
+
+    public function ajaxProcessGetCurrentStock()
+    {
+        $id_product = (int) Tools::getValue('productId');
+        $id_product_attribute = (int) Tools::getValue('productAttributeId');
+
+        $stock = StockAvailable::getQuantityAvailableByProduct($id_product, $id_product_attribute);
+
+        $this->response([
+            'currentStock' => (int) $stock,
+        ]);
+    }
+
+    public function ajaxProcessSaveMovement()
+    {
+        $id_lang = (int) $this->context->language->id;
+        $productId = (int) Tools::getValue('productId');
+        $productAttributeId = (int) Tools::getValue('productAttributeId');
+        $quantity = (int) Tools::getValue('movementQuantity');
+        $quantityAfter = (int) Tools::getValue('movementQuantityAfter');
+        $reason = (int) Tools::getValue('movementReason');
+        $message = null;
+
+        $product = new Product($productId, false, $id_lang);
+        $combination = new Combination($productAttributeId);
+
+        $model = new ModelMpStockMovement();
+        $model->id_document = null;
+        $model->ref_movement = null;
+        $model->id_warehouse = null;
+        $model->id_supplier = null;
+        $model->document_number = null;
+        $model->document_date = null;
+        $model->id_mpstock_mvt_reason = $reason;
+        $model->id_product = $productId;
+        $model->id_product_attribute = $productAttributeId;
+        $model->reference = $product->reference;
+        $model->ean13 = $combination->ean13;
+        $model->upc = $combination->upc;
+        $model->price_te = $product->price;
+        $model->wholesale_price_te = $product->wholesale_price;
+        $model->id_employee = (int) $this->context->employee->id;
+        $model->date_add = date('Y-m-d H:i:s');
+        $model->date_upd = null;
+        $model->id_order = null;
+        $model->id_order_detail = null;
+        $model->mvt_reason = $this->getMvtReasonName($reason);
+        $model->stock_quantity_before = StockAvailable::getQuantityAvailableByProduct($productId, $productAttributeId);
+        $model->stock_movement = $quantity;
+        $model->stock_quantity_after = $quantityAfter;
+
+        try {
+            $res = $model->add();
+            $message = $this->l('Movimento salvato correttamente');
+        } catch (\Throwable $th) {
+            $res = false;
+            $message = $th->getMessage();
+        }
+
+        if (!$res) {
+            $this->response([
+                'success' => $res,
+                'message' => $message,
+            ]);
+        }
     }
 }

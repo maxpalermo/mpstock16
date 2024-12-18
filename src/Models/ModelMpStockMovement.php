@@ -21,7 +21,6 @@ class ModelMpStockMovement extends ObjectModel
 {
     public $id_mpstock_movement;
     public $id_document;
-    public $ref_movement;
     public $id_warehouse;
     public $id_supplier;
     public $document_number;
@@ -45,29 +44,28 @@ class ModelMpStockMovement extends ObjectModel
     public $stock_quantity_after;
 
     public static $definition = [
-        'table' => 'mpstock_product',
-        'primary' => 'id_mpstock_product',
+        'table' => 'mpstock_movement',
+        'primary' => 'id_mpstock_movement',
         'fields' => [
             'id_document' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'ref_movement' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
-            'id_warehouse' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'id_supplier' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'document_number' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
-            'document_date' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => true],
+            'id_warehouse' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => false],
+            'id_supplier' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
+            'document_number' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => false, 'size' => 255],
+            'document_date' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => false],
             'id_mpstock_mvt_reason' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'id_product' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'id_product_attribute' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'mvt_reason' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
+            'id_product' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
+            'id_product_attribute' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'reference' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
-            'ean13' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
-            'upc' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
+            'ean13' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => false, 'size' => 255],
+            'upc' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => false, 'size' => 255],
             'price_te' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
-            'wholesale_price_te' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
-            'id_employee' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'wholesale_price_te' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => false],
+            'id_employee' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'date_add' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => true],
             'date_upd' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => true],
-            'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'id_order_detail' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'mvt_reason' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => 255],
+            'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => false],
+            'id_order_detail' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => false],
             'stock_quantity_before' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
             'stock_movement' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
             'stock_quantity_after' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
@@ -143,5 +141,94 @@ class ModelMpStockMovement extends ObjectModel
         $result = Db::getInstance()->getValue($sql);
 
         return $result;
+    }
+
+    public function countAllResults()
+    {
+        $db = Db::getInstance();
+        $sql = 'SELECT COUNT(*) as total FROM ' . _DB_PREFIX_ . 'mpstock_movement';
+        $result = (int) $db->getValue($sql);
+
+        return $result;
+    }
+
+    public function dataTable($offset = 0, $limit = 0, $columns = null, $order = null)
+    {
+        $table = self::$definition['table'];
+        $primary = self::$definition['primary'];
+        $id_lang = (int) Context::getContext()->language->id;
+        $id_shop = (int) Context::getContext()->shop->id;
+
+        $count = $this->countAllResults();
+        $filtered = false;
+        $ordered = false;
+
+        $db = Db::getInstance();
+        $builder = new DbQuery();
+
+        $builder
+            ->select('SQL_CALC_FOUND_ROWS a.*')
+            ->select('d.number_document,d.date_document,d.id_supplier')
+            ->select('o.reference as order_reference')
+            ->select('pl.name as product_name')
+            ->select('m.name as mvt_reason')
+            ->select('CONCAT(e.firstname, " ", e.lastname) as employee')
+            ->select('s.name as supplier, 0 as checkbox')
+            ->from($table, 'a')
+            ->leftJoin('orders', 'o', 'a.id_order = o.id_order')
+            ->leftJoin('product_lang', 'pl', 'a.id_product = pl.id_product and pl.id_lang = ' . (int) $id_lang)
+            ->leftJoin('mpstock_document', 'd', 'a.id_document = d.id_mpstock_document')
+            ->leftJoin('mpstock_mvt_reason_lang', 'm', 'a.id_mpstock_mvt_reason = m.id_mpstock_mvt_reason and m.id_lang = ' . (int) $id_lang)
+            ->leftJoin('employee', 'e', 'a.id_employee = e.id_employee')
+            ->leftJoin('supplier', 's', 'd.id_supplier = s.id_supplier');
+
+        if ($columns) {
+            foreach ($columns as $key => $column) {
+                if ($column['search']['value'] != '' && $columns[$key]['searchable'] == 'true') {
+                    $builder->where($column['name'] . ' LIKE "' . $column['search']['value'] . '"');
+                    $filtered = true;
+
+                    continue;
+                }
+            }
+        }
+
+        if ($order) {
+            foreach ($order as $item) {
+                $id_column = (int) $item['column'];
+                $term = $columns[$id_column]['name'];
+                $dir = $item['dir'];
+
+                if ($columns[$id_column]['orderable'] == 'false') {
+                    continue;
+                }
+
+                $builder->orderBy("{$term} {$dir}");
+                $ordered = true;
+            }
+        }
+
+        if (!$ordered) {
+            $builder
+                ->orderBy('a.id_mpstock_movement DESC');
+        }
+
+        $builder->limit($limit, $offset);
+
+        $query = $builder->build();
+        $result = $db->executeS($query);
+        $filtered_rows = (int) $db->getValue('SELECT FOUND_ROWS()');
+
+        if ($result) {
+            foreach ($result as &$row) {
+                $row['actions'] = '';
+            }
+        }
+
+        return [
+            'totalRecords' => $count,
+            'totalFiltered' => $filtered ? $filtered_rows : $count,
+            'data' => $result,
+        ];
     }
 }

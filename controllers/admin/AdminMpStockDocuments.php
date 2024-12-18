@@ -41,63 +41,6 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $this->suppliers = $this->getSuppliers();
         $this->employees = $this->getEmployees();
 
-        $this->fields_list = [
-            'id_mpstock_document' => [
-                'title' => $this->l('ID'),
-                'align' => 'center',
-                'class' => 'fixed-width-xs',
-            ],
-            'number_document' => [
-                'title' => $this->l('Numero'),
-                'filter_key' => 'a!number_document',
-            ],
-            'date_document' => [
-                'title' => $this->l('Data'),
-                'filter_key' => 'a!date_document',
-            ],
-            'id_mpstock_mvt_reason' => [
-                'title' => $this->l('Movimento'),
-                'type' => 'select',
-                'list' => $this->mvtReasons,
-                'filter_key' => 'a!id_mpstock_mvt_reason',
-                'callback' => 'getMvtReasonName',
-            ],
-            'id_supplier' => [
-                'title' => $this->l('Fornitore'),
-                'type' => 'select',
-                'list' => $this->getSuppliers(),
-                'filter_key' => 'a!id_supplier',
-                'callback' => 'getSupplierName',
-            ],
-            'tot_document_ti' => [
-                'title' => $this->l('Totale'),
-                'type' => 'price',
-                'align' => 'text-right',
-                'class' => 'fixed-width-md',
-            ],
-            'id_employee' => [
-                'title' => $this->l('Operatore'),
-                'type' => 'select',
-                'list' => $this->getEmployees(),
-                'filter_key' => 'a!id_employee',
-                'callback' => 'getEmployeeName',
-            ],
-            'date_add' => [
-                'title' => $this->l('Data inserimento'),
-                'align' => 'text-center',
-                'filter_key' => 'a!date_add',
-                'order_by' => true,
-                'order_way' => 'DESC',
-            ],
-        ];
-
-        $this->bulk_actions = [
-            'delete' => [
-                'text' => $this->l('Delete selected'),
-                'confirm' => $this->l('Delete selected items?'),
-            ],
-        ];
-
         parent::__construct();
     }
 
@@ -119,22 +62,19 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.js');
         $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/showToastify.js');
         $this->addCSS(_MODULE_DIR_ . 'mpstock/views/css/style.css');
+        $this->addJqueryPlugin('autocomplete');
+        $this->addJqueryUI('ui.autocomplete');
     }
 
     public function renderList()
     {
-        // $this->addRowAction('edit');
-        // $this->addRowAction('delete');
-
-        // return parent::renderList();
-
         return false;
     }
 
     public function initContent()
     {
         $tpl = $this->context->smarty->createTemplate(
-            $this->getTemplatePath() . 'dataTables/documents.tpl',
+            $this->getTemplatePath() . 'documents/document.tpl',
             $this->context->smarty
         );
 
@@ -176,15 +116,21 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         );
     }
 
-    public function ajaxProcessGetInvoiceDetails()
+    public function ajaxProcessGetInvoiceDetails($id_invoice = null, $ajax = true)
     {
-        $data = file_get_contents('php://input');
-        $data = json_decode($data, true);
-        $id_invoice = (int) $data['id_invoice'];
+        if ($ajax) {
+            $data = file_get_contents('php://input');
+            $data = json_decode($data, true);
+            $id_invoice = (int) $data['id_invoice'];
+        } else {
+            if (!$id_invoice) {
+                return false;
+            }
+        }
 
         $movements = ModelMpStockMovement::getMovementsByIdDocument($id_invoice);
         $tpl = $this->context->smarty->createTemplate(
-            $this->getTemplatePath() . 'dataTables/document-details.tpl',
+            $this->getTemplatePath() . 'documents/document-details.tpl',
             $this->context->smarty
         );
 
@@ -202,14 +148,138 @@ class AdminMpStockDocumentsController extends ModuleAdminController
 
         $table = $tpl->fetch();
 
-        return $this->response(
+        $response =
             [
                 'id_invoice' => $id_invoice,
                 'id_document' => $id_invoice,
                 'movements' => $movements,
                 'content' => $table,
-            ]
-        );
+            ];
+
+        if ($ajax) {
+            $this->response($response);
+        }
+
+        return $response;
+    }
+
+    public function ajaxProcessSearchTermProduct()
+    {
+        $term = Tools::getValue('term');
+        $sql = new DbQuery();
+        $sql->select('p.id_product as value, pl.name as label')
+            ->from('product', 'p')
+            ->leftJoin('product_lang', 'pl', 'p.id_product = pl.id_product AND pl.id_lang = ' . (int) $this->context->language->id)
+            ->where('p.reference LIKE "%' . pSQL($term) . '%" OR pl.name LIKE "%' . pSQL($term) . '%"')
+            ->limit(10);
+
+        $result = Db::getInstance()->executeS($sql);
+
+        $this->response($result);
+    }
+
+    public function ajaxProcessGetProductAttributes()
+    {
+        $id_product = (int) Tools::getValue('productId');
+        $sql = new DbQuery();
+        $sql->select('pa.id_product_attribute as value, GROUP_CONCAT(CONCAT(agl.name, ":", al.name) SEPARATOR ", ") as label')
+            ->from('product_attribute', 'pa')
+            ->leftJoin('product_attribute_combination', 'pac', 'pa.id_product_attribute = pac.id_product_attribute')
+            ->leftJoin('attribute', 'a', 'pac.id_attribute = a.id_attribute')
+            ->leftJoin('attribute_lang', 'al', 'a.id_attribute = al.id_attribute AND al.id_lang = ' . (int) $this->context->language->id)
+            ->leftJoin('attribute_group', 'ag', 'a.id_attribute_group = ag.id_attribute_group')
+            ->leftJoin('attribute_group_lang', 'agl', 'ag.id_attribute_group = agl.id_attribute_group AND agl.id_lang = ' . (int) $this->context->language->id)
+            ->where('pa.id_product = ' . $id_product)
+            ->groupBy('pa.id_product_attribute')
+            ->orderBy('pa.id_product_attribute ASC');
+
+        $result = Db::getInstance()->executeS($sql);
+
+        $this->response($result);
+    }
+
+    public function ajaxProcessGetCurrentStock()
+    {
+        $id_product = (int) Tools::getValue('productId');
+        $id_product_attribute = (int) Tools::getValue('productAttributeId');
+
+        $stock = StockAvailable::getQuantityAvailableByProduct($id_product, $id_product_attribute);
+
+        $this->response([
+            'currentStock' => (int) $stock,
+        ]);
+    }
+
+    public function ajaxProcessSaveMovement()
+    {
+        $id_lang = (int) $this->context->language->id;
+        $documentId = (int) Tools::getValue('documentId');
+        $productId = (int) Tools::getValue('productId');
+        $productAttributeId = (int) Tools::getValue('productAttributeId');
+        $movementReason = (int) Tools::getValue('movementReason');
+        $quantity = (int) Tools::getValue('movementQuantity');
+        $quantityAfter = (int) Tools::getValue('movementQuantityAfter');
+
+        $message = null;
+
+        $product = new Product($productId, false, $id_lang);
+        $combination = new Combination($productAttributeId);
+        $document = new ModelMpStockDocument($documentId);
+        if (!Validate::isLoadedObject($document)) {
+            $this->response([
+                'success' => false,
+                'title' => $this->module->l('Salva Movimento', get_class($this)),
+                'message' => $this->module->l('Errore: Documento non trovato', get_class($this)),
+            ]);
+        }
+
+        $id_supplier = (int) $document->id_supplier;
+        $document_number = $document->number_document;
+        $document_date = $document->date_document;
+
+        $model = new ModelMpStockMovement();
+        $model->id_document = $documentId;
+        $model->id_warehouse = 0;
+        $model->id_supplier = $id_supplier;
+        $model->document_number = $document_number;
+        $model->document_date = $document_date;
+        $model->id_mpstock_mvt_reason = $movementReason;
+        $model->id_product = $productId;
+        $model->id_product_attribute = $productAttributeId;
+        $model->reference = $product->reference;
+        $model->ean13 = $combination->ean13;
+        $model->upc = $combination->upc;
+        $model->price_te = $product->price;
+        $model->wholesale_price_te = $product->wholesale_price;
+        $model->id_employee = (int) $this->context->employee->id;
+        $model->date_add = date('Y-m-d H:i:s');
+        $model->date_upd = null;
+        $model->id_order = null;
+        $model->id_order_detail = null;
+        $model->mvt_reason = $this->getMvtReasonName($movementReason);
+        $model->stock_quantity_before = StockAvailable::getQuantityAvailableByProduct($productId, $productAttributeId);
+        $model->stock_movement = $quantity;
+        $model->stock_quantity_after = $quantityAfter;
+
+        try {
+            $res = $model->add();
+            $message = $this->l('Movimento salvato correttamente');
+        } catch (\Throwable $th) {
+            $res = false;
+            $message = $th->getMessage();
+        }
+
+        $this->response([
+            'success' => $res,
+            'title' => $this->module->l('Salva Movimento', get_class($this)),
+            'message' => $message,
+        ]);
+    }
+
+    protected function refreshTableMovements($id_invoice)
+    {
+        $db = Db::getInstance();
+        $query = new DbQuery();
     }
 
     public function renderForm()
@@ -221,18 +291,17 @@ class AdminMpStockDocumentsController extends ModuleAdminController
     {
         $id_lang = (int) $this->context->language->id;
         $sql = new DbQuery();
-        $sql->select('*')
-            ->from('mpstock_mvt_reason_lang')
-            ->where('id_lang = ' . $id_lang)
-            ->orderBy('name ASC');
+        $sql->select('a.id_mpstock_mvt_reason, a.sign, b.name')
+            ->from('mpstock_mvt_reason', 'a')
+            ->leftJoin('mpstock_mvt_reason_lang', 'b', 'a.id_mpstock_mvt_reason = b.id_mpstock_mvt_reason and b.id_lang=' . (int) $this->context->language->id)
+            ->orderBy('b.name ASC');
 
         $result = Db::getInstance()->executeS($sql);
-        $out = [];
-        foreach ($result as $row) {
-            $out[$row['id_mpstock_mvt_reason']] = $row['name'];
+        if (!$result) {
+            return [];
         }
 
-        return $out;
+        return $result;
     }
 
     protected function getSuppliers()
@@ -244,12 +313,11 @@ class AdminMpStockDocumentsController extends ModuleAdminController
             ->orderBy('name ASC');
 
         $result = Db::getInstance()->executeS($sql);
-        $out = [];
-        foreach ($result as $row) {
-            $out[$row['id_supplier']] = $row['name'];
+        if (!$result) {
+            return [];
         }
 
-        return $out;
+        return $result;
     }
 
     protected function getEmployees()
@@ -261,15 +329,14 @@ class AdminMpStockDocumentsController extends ModuleAdminController
             ->orderBy('lastname ASC');
 
         $result = Db::getInstance()->executeS($sql);
-        $out = [];
-        foreach ($result as $row) {
-            $out[$row['id_employee']] = $row['lastname'] . ' ' . $row['firstname'];
+        if (!$result) {
+            return [];
         }
 
-        return $out;
+        return $result;
     }
 
-    public function getMvtReasonName($value)
+    public function getMvtReasonName($value, $returnsName = true)
     {
         if ((int) $value == 0) {
             return '--';
@@ -279,7 +346,12 @@ class AdminMpStockDocumentsController extends ModuleAdminController
             return '--';
         }
 
-        return $this->mvtReasons[$value];
+        $reason = $this->mvtReasons[$value];
+        if ($returnsName) {
+            return $reason['name'];
+        }
+
+        return $reason;
     }
 
     public function getSupplierName($value)

@@ -26,12 +26,50 @@
 * to avoid any conflicts with others containers.
 */
 
+.submenu li[id^="subtab-"] a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f105";
+    color: #fefefe;
+    margin-right: 4px;
+}
+
 .icon-AdminMpStock:before {
-    color: #b2f4b7;
+    color: #ebe09b;
     content: "\f1fe";
 }
 
 .icon-MpModules:before {
-	color: #b2f4b7;
+    color: #ebe09b;
     content: "\f16b";
+}
+
+#subtab-AdminMpStockDocuments a:before {
+    color: #ebe09b;
+    content: "\f201";
+}
+
+#subtab-AdminMpStockMovements a:before {
+    color: #ebe09b;
+    content: "\f07a";
+}
+
+#subtab-AdminMpStockImport a:before {
+    color: #ebe09b;
+    content: "\f019";
+}
+
+#subtab-AdminMpStockQuickMovement a:before {
+    color: #ebe09b;
+    content: "\f02a";
+}
+
+#subtab-AdminMpStockAvailability a:before {
+    color: #ebe09b;
+    content: "\f080";
 }

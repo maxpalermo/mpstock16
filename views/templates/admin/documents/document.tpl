@@ -22,47 +22,33 @@
 <div class="panel">
     <div class="panel-heading">
         <i class="icon icon-cogs"></i>
-        <span>Elenco moviomenti</span>
+        <span>Elenco documenti</span>
     </div>
     <div class="panel-body">
-        <table class="table table-striped table-bordered table-hover" id="table-movements">
+        <table class="table table-striped table-bordered table-hover" id="table-documents">
             <thead>
                 <tr>
                     <th>
-                        <input type="checkbox" id="check-all-movements" />
+                        <input type="checkbox" id="check-all-documents" />
                     </th>
                     <th>Id</th>
                     <th>Numero</th>
                     <th>Data</th>
                     <th>Movimento</th>
                     <th>Fornitore</th>
-                    <th>Prodotto</th>
-                    <th>Riferimento</th>
-                    <th>Combinazione</th>
-                    <th>Ean13</th>
-                    <th>Prezzo</th>
-                    <th>Stock iniziale</th>
-                    <th>Movimento</th>
-                    <th>Stock finale</th>
+                    <th>Totale</th>
                     <th>Operatore</th>
                     <th>Data inserimento</th>
                     <th>Azioni</th>
                 </tr>
                 <tr>
                     <th data-field=""></th>
-                    <th data-field="id_mpstock_movement"></th>
-                    <th data-field="number_movement"></th>
-                    <th data-field="date_movement"></th>
+                    <th data-field="id_mpstock_document"></th>
+                    <th data-field="number_document"></th>
+                    <th data-field="date_document"></th>
                     <th data-field="mvt_reason"></th>
                     <th data-field="supplier"></th>
-                    <th data-field="product_name"></th>
-                    <th data-field="reference"></th>
-                    <th data-field="product_combination"></th>
-                    <th data-field="ean13"></th>
-                    <th data-field="price_te"></th>
-                    <th data-field="stock_quantity_before"></th>
-                    <th data-field="stock_movement"></th>
-                    <th data-field="stock_quantity_after"></th>
+                    <th data-field="tot_document_ti"></th>
                     <th data-field="employee"></th>
                     <th data-field="date_add"></th>
                     <th data-field=""></th>
@@ -76,9 +62,9 @@
     <div class="panel-footer">
         <tr>
             <th colspan="10" class="text-center">
-                <button type="button" class="btn btn-primary" id="btn-add-movement" data-toggle="modal" data-target="#newMovementModal">
+                <button type="button" class="btn btn-primary" id="btn-add-document">
                     <i class="icon icon-plus"></i>
-                    <span>Aggiungi movimento</span>
+                    <span>Aggiungi documento</span>
                 </button>
             </th>
         </tr>
@@ -86,27 +72,11 @@
 </div>
 
 <script type="text/javascript">
+    let dataTablesMovements = [];
     let dataTable = null;
 
-    function setBgColor(data, type, row) {
-        let bg = 'info';
-        let value = Number(data).toLocaleString("it-IT", {
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0
-        });
-
-        if (Number(data) < 0) {
-            bg = 'danger';
-        } else if (Number(data) == 0) {
-            bg = 'warning';
-        } else {
-            bg = 'info';
-        }
-        return `<span class="pull-right text-${ bg }">${ value }</span>`;
-    }
-
     function initDataTable() {
-        dataTable = $('#table-movements').DataTable({
+        dataTable = $('#table-documents').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -114,7 +84,7 @@
                 type: "POST",
                 data: {
                     ajax: true,
-                    action: "get_movements"
+                    action: "get_documents"
                 }
             },
             columns: [{
@@ -126,54 +96,37 @@
                         let node = document.createElement('div');
                         $(node)
                             .addClass('d-flex justify-content-between')
-                            .append('<input type="checkbox" name="id_mpstock_movement[]" value="' + row.id_mpstock_movement + '" />')
+                            .append($("<button>").addClass('btn btn-link toggleInvoiceDetail').attr('data-id_invoice', row.id_mpstock_document).append('<i class="fa fa-chevron-up"></i>'))
+                            .append('<input type="checkbox" name="id_mpstock_document[]" value="' + row.id_mpstock_document + '" />')
                         return node;
                     },
                 },
                 {
-                    data: "id_mpstock_movement",
+                    data: "id_mpstock_document",
                     render: function(data, type, row) {
-                        return '<a href="{$base_url}admin/mpstock/movements/edit/' + data + '">' + data + '</a>';
+                        return '<a href="{$base_url}admin/mpstock/documents/edit/' + data + '">' + data + '</a>';
                     },
-                    name: "a.id_mpstock_movement"
+                    name: "a.id_mpstock_document"
                 },
                 {
                     data: "number_document",
-                    name: "d.number_document"
+                    name: "a.number_document",
                 },
                 {
                     data: "date_document",
-                    name: "d.date_document"
+                    name: "a.date_document"
                 },
                 {
                     data: "mvt_reason",
-                    name: "mvt.name"
+                    name: "m.name",
                 },
                 {
                     data: "supplier",
                     name: "s.name"
                 },
                 {
-                    data: "product_name",
-                    name: "pl.name",
-                },
-                {
-                    data: "reference",
-                    name: "a.reference",
-                },
-                {
-                    data: "product_combination",
-                    name: "",
-                    searchable: false,
-                    orderable: false,
-                },
-                {
-                    data: "ean13",
-                    name: "a.ean13"
-                },
-                {
-                    data: "price_te",
-                    name: "a.price_te",
+                    data: "tot_document_ti",
+                    name: "a.tot_document_ti",
                     render: function(data, type, row) {
                         let bg = 'info';
                         let value = Number(data).toLocaleString("it-IT", {
@@ -186,30 +139,9 @@
                         } else if (Number(data) == 0) {
                             bg = 'warning';
                         } else {
-                            bg = 'info';
+                            bg = 'success';
                         }
                         return `<span class="pull-right text-${ bg }">${ value } EUR</span>`;
-                    },
-                },
-                {
-                    data: "stock_quantity_before",
-                    name: "a.stock_quantity_before",
-                    render: function(data, type, row) {
-                        return setBgColor(data, type, row);
-                    },
-                },
-                {
-                    data: "stock_movement",
-                    name: "a.stock_movement",
-                    render: function(data, type, row) {
-                        return setBgColor(data, type, row);
-                    },
-                },
-                {
-                    data: "stock_quantity_after",
-                    name: "a.stock_quantity_after",
-                    render: function(data, type, row) {
-                        return setBgColor(data, type, row);
                     },
                 },
                 {
@@ -227,27 +159,24 @@
                 }
             ],
             initComplete: function() {
-                $('#check-all-movements').on('change', function() {
+                $('#check-all-documents').on('change', function() {
                     let checked = $(this).prop('checked');
-                    $('#table-movements tbody input[type="checkbox"]').prop('checked', checked);
+                    $('#table-documents tbody input[type="checkbox"]').prop('checked', checked);
                 });
                 this.api()
                     .columns()
                     .every(function() {
                         let column = this;
-                        console.log(column.index());
                         let header = column.header();
                         let data_field = header.dataset.field;
 
                         if (data_field) {
                             switch (data_field) {
-                                case "id_mpstock_movement":
+                                case "id_mpstock_document":
                                 case "number_document":
                                 case "mvt_reason":
                                 case "supplier":
-                                case "product_name":
-                                case "reference":
-                                case "ean13":
+                                case "tot_document_ti":
                                 case "employee":
                                     let input = document.createElement('input');
                                     $(input).addClass('form-control');
@@ -274,7 +203,7 @@
                                         }
                                     });
                                     break;
-                                case "date_movement":
+                                case "date_document":
                                 case "date_add":
                                     let datepicker = document.createElement('input');
                                     $(datepicker).attr('type', 'date').addClass('form-control');
@@ -305,7 +234,7 @@
                     });
             },
             callback: function() {
-                $('#check-all-movements').prop('checked', false);
+                $('#check-all-documents').prop('checked', false);
             },
             rowCallback: function(row, data) {
                 if (data.status == 0) {
@@ -328,8 +257,6 @@
             button = $(button).closest('button')[0];
         }
 
-        console.log("BUTTON", button);
-
         let tr = button.closest('tr');
         let id_invoice = button.dataset.id_invoice;
         let row = dataTable.row(tr);
@@ -343,36 +270,60 @@
             $(button).find('i').removeClass('fa-chevron-up').addClass('fa-chevron-down');
             const content = await addChildInvoiceDetails(row.data(), id_invoice);
             row.child(content).show();
+
+            console.log(dataTablesMovements);
         }
     }
 
     async function addChildInvoiceDetails(data, id_invoice) {
-        console.log(data);
+        const params =
+            JSON.stringify({
+                ajax: true,
+                action: 'get_invoice_details',
+                id_invoice: id_invoice
+            });
 
-        const params = JSON.stringify({
-            ajax: true,
-            action: 'get_invoice_details',
-            id_invoice: id_invoice
-        });
-
-        let response = await fetch(
-            "{$admin_controller_url}&action=get_invoice_details&ajax=1&id_invoice=" + id_invoice,
-            {
+        let response =
+            await fetch(
+                "{$admin_controller_url}&action=get_invoice_details&ajax=1&id_invoice=" + id_invoice, {
                 method: 'POST',
                 body: params
             })
 
-        let details = await response.json();
+    let details = await response.json();
 
-        return details.content;
+    return details.content;
     }
 
     $(function(e) {
-        console.log("DomContentLoaded");
         initDataTable();
 
         dataTable.on('click', '.toggleInvoiceDetail', function(e) {
             toggleInvoiceDetail(e);
+        });
+
+        $(document).on('click', ".btn-add-movement", function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const row = $(this).closest('tr').prev();
+            const data = dataTable.row(row).data();
+
+            const id_document = $(this).attr('id').replace('btn-add-movement-', '');
+            const id_movement = data.id_mpstock_mvt_reason;
+            const id_product = data.id_product;
+            const id_product_attribute = data.id_product_attribute;
+            const qty = data.qty;
+            const price = data.price;
+
+            $('#id_mpstock_document').val(id_document);
+            $('#movementReason').val(id_movement).trigger("chosen:updated");
+            $("#movementQuantity").val("0");
+            $('#newMovementModal').modal('show');
+        });
+
+        $("#newMovementModal").on('shown.bs.modal', function(e) {
+            $("#product").focus();
         });
     });
 </script>

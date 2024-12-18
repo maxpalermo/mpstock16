@@ -17,6 +17,9 @@
  * @copyright Since 2016 Massimiliano Palermo
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
+
+namespace MpSoft\MpStock\Helpers;
+
 class ImportOrdersDetails
 {
     protected $module;
@@ -28,34 +31,34 @@ class ImportOrdersDetails
 
     public function __construct()
     {
-        /** @var Context */
-        $this->context = Context::getContext();
-        /** @var Module */
-        $this->module = Module::getInstanceByName('mpstock');
+        /** @var \Context */
+        $this->context = \Context::getContext();
+        /** @var \Module */
+        $this->module = \Module::getInstanceByName('mpstock');
         /** @var int */
         $this->id_lang = $this->context->language->id;
-        /** @var ModuleAdminController */
+        /** @var \ModuleAdminController */
         $this->controller = $this->context->controller;
     }
 
     public function getOrdersDetails()
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
 
-        $sub = new DbQuery();
+        $sub = new \DbQuery();
         $sub->select('id_order_detail')
             ->from('mpstock_product')
             ->where('id_order_detail>0');
         $sub = '(' . $sub->build() . ')';
 
-        $sql_count = new DbQuery();
+        $sql_count = new \DbQuery();
         $sql_count->select('COUNT(*)')
             ->from('order_detail', 'od')
             ->innerJoin('orders', 'o', 'o.id_order = od.id_order')
             ->where('od.id_order_detail NOT IN ' . $sub);
         $total = (int) $db->getValue($sql_count);
 
-        $sql = new DbQuery();
+        $sql = new \DbQuery();
         $sql->select('od.*, o.date_add, o.date_upd')
             ->from('order_detail', 'od')
             ->innerJoin('orders', 'o', 'o.id_order = od.id_order')
@@ -88,13 +91,13 @@ class ImportOrdersDetails
         $errors = [];
 
         $record = $this->hydrate($orderDetail, self::MOVEMENT_WEB_SELL);
-        $model = new ModelMpStockMovement();
+        $model = new \ModelMpStockMovement();
         $model->hydrate($record);
 
         try {
             $model->add(false, true);
             $success[] = $model->id_order_detail;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $errors[] = $e->getMessage();
         }
 

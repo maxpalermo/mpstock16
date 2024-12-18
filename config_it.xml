@@ -2,7 +2,7 @@
 <module>
 	<name>mpstock</name>
 	<displayName><![CDATA[MP Gestione Magazzino]]></displayName>
-	<version><![CDATA[1.1.0]]></version>
+	<version><![CDATA[1.1.5]]></version>
 	<description><![CDATA[Gestisce le quantit&agrave; di magazzino.]]></description>
 	<author><![CDATA[Massimiliano Palermo]]></author>
 	<tab><![CDATA[administration]]></tab>

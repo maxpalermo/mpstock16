@@ -21,20 +21,10 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-require_once _PS_MODULE_DIR_ . 'mpstock/models/autoload.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/helpers/autoload.php';
+require_once _PS_MODULE_DIR_ . 'mpstock/src/Models/autoload.php';
+require_once _PS_MODULE_DIR_ . 'mpstock/vendor/autoload.php';
 
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockObjectModelTypeMovement.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockHelperFormAddTypeMovement.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockHelperListTypeMovement.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockProductExtraHelperForm.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockProductExtraHelperList.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockTools.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockProductExtraMovements.php';
-
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockMvtReasonObjectModel.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockDocumentObjectModel.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockProductObjectModel.php';
+use MpSoft\MpStock\Helpers\InstallTab;
 
 class MpStock extends Module
 {
@@ -53,7 +43,7 @@ class MpStock extends Module
     {
         $this->name = 'mpstock';
         $this->tab = 'administration';
-        $this->version = '1.1.0';
+        $this->version = '1.1.6';
         $this->author = 'Massimiliano Palermo';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -66,131 +56,8 @@ class MpStock extends Module
         $this->ps_versions_compliancy = ['min' => '1.6', 'max' => _PS_VERSION_];
         $this->id_lang = (int) Context::getContext()->language->id;
         $this->id_shop = (int) Context::getContext()->shop->id;
-        $this->link = new Link();
+        $this->link = Context::getContext()->link;
         $this->smarty = Context::getContext()->smarty;
-    }
-
-    /**
-     * Return the admin class name
-     *
-     * @return string Admin class name
-     */
-    public function getAdminClassName()
-    {
-        return $this->adminClassName;
-    }
-
-    /**
-     * Return the Admin Template Path
-     *
-     * @return string The admin template path
-     */
-    public function getAdminTemplatePath()
-    {
-        return $this->getPath() . 'views/templates/admin/';
-    }
-
-    /**
-     * Get the Id of current language
-     *
-     * @return int id language
-     */
-    public function getIdLang()
-    {
-        return (int) $this->id_lang;
-    }
-
-    /**
-     * Get the Id of current shop
-     *
-     * @return int id shop
-     */
-    public function getIdShop()
-    {
-        return (int) $this->id_shop;
-    }
-
-    /**
-     * Get The URL path of this module
-     *
-     * @return string The URL of this module
-     */
-    public function getUrl()
-    {
-        return $this->_path;
-    }
-
-    /**
-     * Return the physical path of this module
-     *
-     * @return string The path of this module
-     */
-    public function getPath()
-    {
-        return $this->local_path;
-    }
-
-    /**
-     * Add a message to Errors collection
-     *
-     * @param string $message Message to add to collection
-     */
-    public function addError($message)
-    {
-        $this->errors[] = $message;
-    }
-
-    /**
-     * Add a message to Warnings collection
-     *
-     * @param string $message Message to add to collection
-     */
-    public function addWarning($message)
-    {
-        $this->warnings[] = $message;
-    }
-
-    /**
-     * Add a message to Confirmations collection
-     *
-     * @param string $message Message to add to collection
-     */
-    public function addConfirmation($message)
-    {
-        $this->confirmations[] = $message;
-    }
-
-    /**
-     * Check if there is an Ajax call and execute it.
-     */
-    public function ajax()
-    {
-        if (Tools::isSubmit('ajax') && Tools::isSubmit('action')) {
-            $action = 'ajaxProcess' . Tools::ucfirst(Tools::getValue('action'));
-            $this->$action();
-            exit();
-        }
-    }
-
-    /**
-     * Display Messages collections
-     *
-     * @return string HTML messages
-     */
-    public function displayMessages()
-    {
-        $output = [];
-        foreach ($this->errors as $msg) {
-            $output[] = $this->displayError($msg);
-        }
-        foreach ($this->warnings as $msg) {
-            $output[] = $this->displayWarning($msg);
-        }
-        foreach ($this->confirmations as $msg) {
-            $output[] = $this->displayConfirmation($msg);
-        }
-
-        return implode('', $output);
     }
 
     public function install()
@@ -208,74 +75,27 @@ class MpStock extends Module
             $res = $res && $this->registerHook($hook);
         }
 
-        $res = $res && MpStockMvtReasonObjectModel::install()
-            && MpStockDocumentObjectModel::install()
-            && MpStockProductObjectModel::install()
-            && $this->installTab('', $this->adminClassName, $this->l('Magazzino'))
-            && $this->installTab('', 'AdminMpStockDocuments', $this->l('Magazzino - Documenti'))
-            && $this->installTab('', 'AdminMpStockMovements', $this->l('Magazzino - Movimenti'));
+        $res = $res
+            // && MpStockMvtReasonObjectModel::install()
+            // && MpStockDocumentObjectModel::install()
+            // && MpStockProductObjectModel::install()
+            && InstallTab::installRoot($this->name, $this->adminClassName, $this->l('Magazzino'))
+            && InstallTab::installWithParent($this->name, $this->adminClassName, 'AdminMpStockDocuments', $this->l('Documenti'))
+            && InstallTab::installWithParent($this->name, $this->adminClassName, 'AdminMpStockMovements', $this->l('Movimenti'))
+            && InstallTab::installWithParent($this->name, $this->adminClassName, 'AdminMpStockImport', $this->l('Import'))
+            && InstallTab::installWithParent($this->name, $this->adminClassName, 'AdminMpStockQuickMovement', $this->l('Movimento Veloce'))
+            && InstallTab::installWithParent($this->name, $this->adminClassName, 'AdminMpStockAvailability', $this->l('Disponibilità'));
     }
 
     public function uninstall()
     {
         return parent::uninstall()
-            && $this->uninstallTab($this->adminClassName)
-            && $this->uninstallTab('AdminMpStockDocuments')
-            && $this->uninstallTab('AdminMpStockMovements');
-    }
-
-    /**
-     * Install a new menu
-     *
-     * @param string $parent Parent tab name
-     * @param string $class_name Class name of the module
-     * @param string $name Display name of the module
-     * @param boolean $active If true, Tab menu will be shown
-     *
-     * @return boolean True if successfull, False otherwise
-     */
-    public function installTab($parent, $class_name, $name, $active = 1)
-    {
-        // Create new admin tab
-        $tab = new Tab();
-
-        $tab->id_parent = (int) Tab::getIdFromClassName($parent);
-        $tab->name = [];
-
-        foreach (Language::getLanguages(true) as $lang) {
-            $tab->name[$lang['id_lang']] = $name;
-        }
-
-        $tab->class_name = $class_name;
-        $tab->module = $this->name;
-        $tab->active = $active;
-
-        if (!$tab->add()) {
-            $this->addError($this->l('Error during Tab install.'));
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Uninstall a menu
-     *
-     * @param string pe $class_name Class name of the module
-     *
-     * @return boolean True if successfull, False otherwise
-     */
-    public function uninstallTab($class_name)
-    {
-        $id_tab = (int) Tab::getIdFromClassName($class_name);
-        if ($id_tab) {
-            $tab = new Tab((int) $id_tab);
-
-            return $tab->delete();
-        }
-
-        return true;
+            && InstallTab::uninstall($this->adminClassName)
+            && InstallTab::uninstall('AdminMpStockDocuments')
+            && InstallTab::uninstall('AdminMpStockMovements')
+            && InstallTab::uninstall('AdminMpStockImport')
+            && InstallTab::uninstall('AdminMpStockQuickMovement')
+            && InstallTab::uninstall('AdminMpStockAvailability');
     }
 
     public function hookDisplayAdminProductsExtra()
@@ -283,7 +103,7 @@ class MpStock extends Module
         return '';
     }
 
-    public function hookactionAdminControllerSetMedia($params)
+    public function hookActionAdminControllerSetMedia($params)
     {
         /** @var ModuleAdminController */
         $controller = $this->context->controller;
