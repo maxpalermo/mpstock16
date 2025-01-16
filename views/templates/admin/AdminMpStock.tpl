@@ -23,51 +23,52 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 <style>
-    .link-pointer:hover
-    {
+    .link-pointer:hover {
         cursor: pointer;
         font-weight: bold;
         font-size: 1.2em;
     }
-    .tr-pointer:hover
-    {
+
+    .tr-pointer:hover {
         cursor: pointer;
     }
-    .badge-white
-    {
+
+    .badge-white {
         background-color: white !important;
         color: #222 !important;
         border: 1px solid #999 !important;
     }
+
     .ui-autocomplete-loading {
         background: white url("{$img_loading}") right center no-repeat !important;
     }
+
     #progress-wrp {
-      border: 1px solid #0099CC;
-      padding: 1px;
-      position: relative;
-      height: 30px;
-      border-radius: 3px;
-      margin: 10px;
-      text-align: left;
-      background: #fff;
-      box-shadow: inset 1px 3px 6px rgba(0, 0, 0, 0.12);
+        border: 1px solid #0099CC;
+        padding: 1px;
+        position: relative;
+        height: 30px;
+        border-radius: 3px;
+        margin: 10px;
+        text-align: left;
+        background: #fff;
+        box-shadow: inset 1px 3px 6px rgba(0, 0, 0, 0.12);
     }
 
     #progress-wrp .progress-bar {
-      height: 100%;
-      border-radius: 3px;
-      background-color: #72C279;
-      width: 0;
-      box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.11);
+        height: 100%;
+        border-radius: 3px;
+        background-color: #72C279;
+        width: 0;
+        box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.11);
     }
 
     #progress-wrp .status {
-      top: 3px;
-      left: 50%;
-      position: absolute;
-      display: inline-block;
-      color: #000000;
+        top: 3px;
+        left: 50%;
+        position: absolute;
+        display: inline-block;
+        color: #000000;
     }
 </style>
 <div class="row" id="ps_addresses" style="display:none;">
@@ -103,19 +104,19 @@
     <div class="tab-content panel">
         <!--Tabs-->
         <div class="tab-pane active" id="#tab-pane-1">
-            
+
         </div>
         <div class="tab-pane" id="#tab-pane-2">
-            
+
         </div>
         <div class="tab-pane" id="#tab-pane-3">
-            
+
         </div>
         <div class="tab-pane" id="#tab-pane-4">
-            
+
         </div>
         <div class="tab-pane" id="#tab-pane-5">
-            
+
         </div>
     </div>
 </div>
@@ -123,7 +124,7 @@
     <div class="col-md-12">
         <div class="panel">
             <div class="panel-header">
-                
+
             </div>
             <div class="panel-body">
                 <div id="tabs">
@@ -224,7 +225,7 @@
                         {$tab_quick_movement}
                     </div>
                     <div id="tabs-5">
-                        {$tab_config} 
+                        {$tab_config}
                     </div>
                     <div id="tabs-6">
                         {include file='./stock-available.tpl'}
@@ -232,18 +233,18 @@
                 </div>
             </div>
             <div class="panel-footer">
-                
+
             </div>
         </div>
     </div>
 </div>
-                        
+
 
 <script type="text/javascript">
     /*****************
-    * UPLOAD HANDLER *
-    *****************/
-    var Upload = function (file) {
+     * UPLOAD HANDLER *
+     *****************/
+    var Upload = function(file) {
         this.file = file;
     };
 
@@ -256,7 +257,7 @@
     Upload.prototype.getName = function() {
         return this.file.name;
     };
-    Upload.prototype.doUpload = function () {
+    Upload.prototype.doUpload = function() {
         $('#section-list').html('');
         var that = this;
         var formData = new FormData();
@@ -270,14 +271,14 @@
         $.ajax({
             type: "POST",
             dataType: 'json',
-            xhr: function () {
+            xhr: function() {
                 var myXhr = $.ajaxSettings.xhr();
                 if (myXhr.upload) {
                     myXhr.upload.addEventListener('progress', that.progressHandling, false);
                 }
                 return myXhr;
             },
-            success: function (response) {
+            success: function(response) {
                 if ('errors' in response) {
                     $.growl.error({
                         'title': '{l s='ERROR' mod='mpstock'}',
@@ -294,7 +295,7 @@
                     $('#section-list').html(response.html);
                 }
             },
-            error: function (error) {
+            error: function(error) {
                 // handle error
             },
             async: true,
@@ -306,7 +307,7 @@
         });
     };
 
-    Upload.prototype.progressHandling = function (event) {
+    Upload.prototype.progressHandling = function(event) {
         var percent = 0;
         var position = event.loaded || event.position;
         var total = event.total;
@@ -321,98 +322,92 @@
 
     var total_products = 0;
 
-    $(document).on("keypress", "form", function(event) { 
+    $(document).on("keypress", "form", function(event) {
         return event.keyCode != 13;
     });
-    $(document).ready(function(){
-        $('#tabs').tabs({
-            'active': {$active_tab},
-            'activate': function(){
-                var selected = $("#tabs .ui-tabs-panel:visible").index() - 1;
-                $.ajax({
-                    type: 'post',
-                    dataType: 'json',
-                    data:
-                    {
-                        active_tab: selected,
-                        ajax: true,
-                        action: 'setActiveTab'
-                    }
-                });
-            }
-        });
-        $('#form-mpstock_document table tbody tr').each(function(){
-            $(this)
-                .attr('onclick', 'javascript:toggleDocumentRow(this);')
-                .addClass('tr-pointer');
-        });
-        $('#form-mpstock_document table td')
-            .css('font-size', '0.8em')
-            .css('white-space', 'nowrap');
-        $('#form-mpstock_document table th:nth-child(9)').css('display', 'none');
-        $('#form-mpstock_document table th:nth-child(10)').css('display', 'none');
-        $('#form-mpstock_document table td:nth-child(9)').css('display', 'none');
-        $('#form-mpstock_document table td:nth-child(10)').css('display', 'none');
-        $('#mpstock_document_form_submit_btn')
-            .attr('type', 'button')
-            .attr('onclick', 'javascript:loadDocument();');
-
-        $('#form-mpstock_product table td')
-            .css('font-size', '0.8em')
-            .css('white-space', 'nowrap');
-        $('#form-mpstock_product table th:nth-child(2)').css('display', 'none');
-        $('#form-mpstock_product table td:nth-child(2)').css('display', 'none');
-        $('#form-mpstock_product table td:nth-child(5)').css('white-space', 'normal');
-        $('#btn-align-qty').on('click', function(){
-            if (confirm('{l s='Re-align all products quantities?' mod='mpstock'}')) {
-                $('#btn-align-pb').fadeIn();
-                $.ajax({
-                    type: 'post',
-                    dataType: 'json',
-                    data:
-                    {
-                        ajax: true,
-                        action: "realignQuantities"
-                    },
-                    success: function(response)
-                    {
-                        if (response.result) {
-                            $.growl.notice({
-                                title: '{l s='Operation done.' mod='mpstock'}',
-                                message: '{l s='Products have been re-aligned.' mod='mpstock'}'
-                            });
-                        } else {
-                            $.growl.error({
-                                title: '{l s='An error occurred.' mod='mpstock'}',
-                                message: '{l s='Unable to realign quantities.' mod='mpstock'}'
-                            });
+    $(document).ready(function() {
+            $('#tabs').tabs({
+                'active': {$active_tab},
+                'activate': function() {
+                    var selected = $("#tabs .ui-tabs-panel:visible").index() - 1;
+                    $.ajax({
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            active_tab: selected,
+                            ajax: true,
+                            action: 'setActiveTab'
                         }
-                        $('#btn-align-pb').fadeOut();
-                        location.reload();
-                    },
-                    error: function(response)
-                    {
-                        console.log(response);
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+            $('#form-mpstock_document_v2 table tbody tr').each(function() {
+                $(this)
+                    .attr('onclick', 'javascript:toggleDocumentRow(this);')
+                    .addClass('tr-pointer');
+            });
+            $('#form-mpstock_document_v2 table td')
+                .css('font-size', '0.8em')
+                .css('white-space', 'nowrap');
+            $('#form-mpstock_document_v2 table th:nth-child(9)').css('display', 'none');
+            $('#form-mpstock_document_v2 table th:nth-child(10)').css('display', 'none');
+            $('#form-mpstock_document_v2 table td:nth-child(9)').css('display', 'none');
+            $('#form-mpstock_document_v2 table td:nth-child(10)').css('display', 'none');
+            $('#mpstock_document_form_submit_btn')
+                .attr('type', 'button')
+                .attr('onclick', 'javascript:loadDocument();');
+
+            $('#form-mpstock_product table td')
+                .css('font-size', '0.8em')
+                .css('white-space', 'nowrap');
+            $('#form-mpstock_product table th:nth-child(2)').css('display', 'none');
+            $('#form-mpstock_product table td:nth-child(2)').css('display', 'none');
+            $('#form-mpstock_product table td:nth-child(5)').css('white-space', 'normal');
+            $('#btn-align-qty').on('click', function() {
+                    if (confirm('{l s='Re-align all products quantities?' mod='mpstock'}')) {
+                    $('#btn-align-pb').fadeIn();
+                    $.ajax({
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            ajax: true,
+                            action: "realignQuantities"
+                        },
+                        success: function(response) {
+                            if (response.result) {
+                                $.growl.notice({
+                                    title: '{l s='Operation done.' mod='mpstock'}',
+                                    message: '{l s='Products have been re-aligned.' mod='mpstock'}'
+                                });
+                            } else {
+                                $.growl.error({
+                                    title: '{l s='An error occurred.' mod='mpstock'}',
+                                    message: '{l s='Unable to realign quantities.' mod='mpstock'}'
+                                });
+                            }
+                            $('#btn-align-pb').fadeOut();
+                            location.reload();
+                        },
+                        error: function(response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            });
         /**
             SET DEFAULT COMBINATION FOR ALL ACTIVE PRODUCTS
         **/
-        $('#btn-default-qty').on('click', function(){
-            if (confirm('{l s='Set default combination to all products?' mod='mpstock'}')) {
+        $('#btn-default-qty').on('click', function() {
+                if (confirm('{l s='Set default combination to all products?' mod='mpstock'}')) {
                 $('#btn-align-pb').fadeIn();
                 $.ajax({
                     type: 'post',
                     dataType: 'json',
-                    data:
-                    {
+                    data: {
                         ajax: true,
                         action: "setDefaultCombination"
                     },
-                    success: function(response)
-                    {
+                    success: function(response) {
                         if (response.result) {
                             total_products = response.id_products.length;
                             var id_products = response.id_products;
@@ -424,71 +419,65 @@
                             setDefaultCombination(id_products);
                         }
                     },
-                    error: function(response)
-                    {
+                    error: function(response) {
                         console.log(response.responseText);
                     }
                 });
             }
         });
-        $(document).on('mouseover','span[name="expand-stock-row"]', function(){
-            $(this).css({
-                cursor: 'pointer'
-            })
-        });
-        $(document).on('click','span[name="expand-stock-row"]', function(){
-            var td_id = $(this).closest('tr').find('td:nth-child(2)').text();
-            var ids = String(td_id).split('-');
-            var id_product = ids[0];
-            var id_attribute = ids[1];
-            var row = $(this).closest('tr');
-            var ico = $(this).closest('tr').find('td:nth-child(1)').find('i');
-
-            if ($(ico).hasClass('icon-plus-circle')) {
-                $.ajax({
-                    type: 'post',
-                    dataType: 'json',
-                    data:
-                    {
-                        id_product: id_product,
-                        ajax: true,
-                        action: "getProductAttribute"
-                    },
-                    success: function(response)
-                    {
-                        $(row).after(response.html);
-                        $(ico).removeClass().addClass('icon icon-minus-circle');
-                    },
-                    error: function()
-                    {
-
-                    }
-                });
-            } else {
-                $(ico).removeClass().addClass('icon icon-plus-circle');
-                $('tr[name="'+id_product+'"]').remove();
-            }
-        });
-        $(document).on("change","#stock-pagination", function(){
-            stock_pagination(0, $('#stock-pagination').val());
-        });
-        $(document).on("change","#stock-page", function(){
-            stock_pagination($('#stock-page').val(), $('#stock-pagination').val());
-        });
+    $(document).on('mouseover', 'span[name="expand-stock-row"]', function() {
+        $(this).css({
+            cursor: 'pointer'
+        })
     });
-    function setDefaultCombination(id_products)
-    {
+    $(document).on('click', 'span[name="expand-stock-row"]', function() {
+        var td_id = $(this).closest('tr').find('td:nth-child(2)').text();
+        var ids = String(td_id).split('-');
+        var id_product = ids[0];
+        var id_attribute = ids[1];
+        var row = $(this).closest('tr');
+        var ico = $(this).closest('tr').find('td:nth-child(1)').find('i');
+
+        if ($(ico).hasClass('icon-plus-circle')) {
+            $.ajax({
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    id_product: id_product,
+                    ajax: true,
+                    action: "getProductAttribute"
+                },
+                success: function(response) {
+                    $(row).after(response.html);
+                    $(ico).removeClass().addClass('icon icon-minus-circle');
+                },
+                error: function() {
+
+                }
+            });
+        } else {
+            $(ico).removeClass().addClass('icon icon-plus-circle');
+            $('tr[name="' + id_product + '"]').remove();
+        }
+    });
+    $(document).on("change", "#stock-pagination", function() {
+        stock_pagination(0, $('#stock-pagination').val());
+    });
+    $(document).on("change", "#stock-page", function() {
+    stock_pagination($('#stock-page').val(), $('#stock-pagination').val());
+    });
+    });
+
+    function setDefaultCombination(id_products) {
         $.ajax({
             type: 'post',
             dataType: 'json',
-            data:
-            {
+            data: {
                 ajax: true,
                 action: 'setDefaultCombinationProducts',
                 id_products: id_products,
             },
-            success: function(response)
-            {
+            success: function(response) {
                 $('#btn-align-pb').fadeOut();
                 $.growl.notice({
                     title: '{l s='Auto default combination' mod='mpstock'}',
@@ -496,38 +485,34 @@
                 });
                 setTimeout(location.reload(), 3000);
             },
-            error: function(response)
-            {
+            error: function(response) {
                 console.log(response.responseText);
             }
         });
     }
-    function stock_pagination(page, pagination)
-    {
+
+    function stock_pagination(page, pagination) {
         $.ajax({
             type: 'post',
             dataType: 'json',
-            data:
-            {
+            data: {
                 ajax: true,
                 action: 'getStockAvailable',
                 stock_pagination: pagination,
                 stock_page: page
             },
-            success: function(response)
-            {
+            success: function(response) {
                 $('#table-stock').html(response.html);
                 $('#cur_rec').text(response.cur_rec);
                 $('#last_rec').text(response.last_rec);
             },
-            error: function(response)
-            {
+            error: function(response) {
                 console.log(response);
             }
         });
     }
-    function saveDocument()
-    {
+
+    function saveDocument() {
         var id_document = $('#add_id_mpstock_document').val();
         var number = $('#add_number_document').val();
         var date = $('#add_date_document').val();
@@ -537,8 +522,7 @@
         $.ajax({
             type: "post",
             dataType: "json",
-            data:
-            {
+            data: {
                 id_document: id_document,
                 number: number,
                 date: date,
@@ -548,15 +532,14 @@
                 ajax: true,
                 action: 'addDocument'
             },
-            success: function(response)
-            {
+            success: function(response) {
                 if (response.result) {
                     $.growl.notice({
                         'title': '{l s='Operation done' mod='mpstock'}',
                         'message': '{l s='Document saved.' mod='mpstock'}'
                     });
                     setTimeout(
-                        function(){
+                        function() {
                             document.location.href="{$back_url}";
                         },
                         15000
@@ -568,68 +551,65 @@
                     });
                 }
             },
-            error: function(response)
-            {
+            error: function(response) {
                 console.log(response);
             }
         });
     }
-    function toggleDocumentRow(row)
-    {
-        console.log (row);
+
+    function toggleDocumentRow(row) {
+        console.log(row);
         if ($(row).next().attr('data-type') && $(row).next().attr('data-type') == 'row-product') {
             $(row).next().fadeOut().remove();
             return false;
         } else if ($(row).next().attr('data-type')) {
             $(row).next().fadeOut().remove();
         }
-        
+
         var newrow = $('<tr></tr>').attr('data-type', 'row-product');
-        var newcell = $('<td></td>').attr('colspan',16);
-        
+        var newcell = $('<td></td>').attr('colspan', 16);
+
         //get Rows
         $.ajax({
             type: 'post',
             dataType: 'json',
-            data:
-            {
+            data: {
                 ajax: true,
                 action: 'getDocumentRows',
                 id_document: Number($(row).find('td:nth-child(2)').text())
             },
-            success: function(response){
+            success: function(response) {
                 $(newcell).html(response.htmlrow);
                 $(newrow).append(newcell);
                 $(row).after(newrow).fadeIn();
                 bindControls();
             },
-            error: function(response){
+            error: function(response) {
                 console.log("ajax error: ", response);
             }
         });
     }
-    function bindControls()
-    {
+
+    function bindControls() {
         $('.input-autocomplete').autocomplete({
-            source: function( request, response ) {
+            source: function(request, response) {
                 $.ajax({
-                    dataType: "json",
-                    data: 
-                    {
-                        ajax: true,
-                        action: 'getProductAutocomplete',
-                        term: request.term
-                    }
-                })
-                .success(function(data) {
-                    response(data);
-                })
-                .fail(function(){
-                    jAlert('AJAX FAIL');
-                });
+                        dataType: "json",
+                        data: {
+                            ajax: true,
+                            action: 'getProductAutocomplete',
+                            term: request.term
+                        }
+                    })
+                    .success(function(data) {
+                        response(data);
+                    })
+                    .fail(function() {
+                        jAlert('AJAX FAIL');
+                    });
             },
             minLength: 3,
-            select: function( event, ui ) {
+            select: function(event, ui) {
                 event.preventDefault();
                 //console.log("ui:", ui);
                 current_id_product = Number(ui.item.id_product_attribute);
@@ -649,251 +629,235 @@
                 row.find('input[name="wholesale_price_te"]').val(ui.item.wholesale_price_te);
                 row.find('input[name="tax_rate"]').val(ui.item.tax_rate);
                 row.find('input[name="tax_rate_float"]').val(ui.item.tax_rate_float);
-            }    
+            }
         });
     }
-    function importDocument()
-    {
+
+    function importDocument() {
         var focused = $(':focus');
         if (confirm('{l s='Are you sure you want to import old documents?' mod='mpstock'}')) {
-            $(focused).find('i').removeClass('process-icon-download').addClass('process-icon-loading');
-            $.ajax({
-                type: 'post',
-                dataType: 'json',
-                data:
-                {
-                    ajax: true,
-                    action: 'importDocument'
-                },
-                success: function(response)
-                {
-                    $(focused).find('i').removeClass('process-icon-loading').addClass('process-icon-download');
-                    if (response.result) {
-                        $.growl.notice({
-                            title: '{l s='Operation done.' mod='mpstock'}',
-                            message: '{l s='See report for better infos' mod='mpstock'}'
-                        });
-                        $('#info-report').text(response.message);
-                        $('#info-report-row').fadeIn();
-                    } else {
-                        $.growl.warning({
-                            title: '{l s='Failed import.' mod='mpstock'}',
-                            message: '{l s='See report for better infos' mod='mpstock'}'
-                        });
-                        $('#info-report').text(response.message);
-                        $('#info-report-row').fadeIn();
-                    }
-                },
-                error: function(response)
-                {
-                    $(focused).find('i').removeClass('process-icon-loading').addClass('process-icon-download');
-                    console.log("Ajax Call Error: ", response);
-                }
-            });
-        }
-    }
-    function importConfig()
-    {
-        if (confirm('{l s='Are you sure you want to import old configuration?' mod='mpstock'}')) {
-            $.ajax({
-                type: 'post',
-                dataType: 'json',
-                data:
-                {
-                    ajax: true,
-                    action: 'importConfig'
-                },
-                success: function(response)
-                {
-                    if (response.result) {
-                        $.growl.notice({
-                            title: '{l s='Operation done.' mod='mpstock'}',
-                            message: '{l s='See report for better infos' mod='mpstock'}'
-                        });
-                        $('#info-report').text(response.message);
-                        $('#info-report-row').fadeIn();
-                    } else {
-                        $.growl.warning({
-                            title: '{l s='Failed import.' mod='mpstock'}',
-                            message: '{l s='See report for better infos' mod='mpstock'}'
-                        });
-                        $('#info-report').text(response.message);
-                        $('#info-report-row').fadeIn();
-                    }
-                },
-                error: function(response)
-                {
-                    console.log("Ajax Call Error: ", response);
-                }
-            });
-        }
-    }
-    function toggleSign(button)
-    {
-        var id = Number($(button).closest('tr').find('td:nth-child(2)').text());
-        ajaxProcessToggle('mpstock_mvt_reason', 'sign', id, button);
-    }
-    function toggleTransform(button)
-    {
-        var id = Number($(button).closest('tr').find('td:nth-child(2)').text());
-        ajaxProcessToggle('mpstock_mvt_reason', 'transform', id, button);
-    }
-    function toggleDeleted(button)
-    {
-        var id = Number($(button).closest('tr').find('td:nth-child(2)').text());
-        ajaxProcessToggle('mpstock_mvt_reason', 'deleted', id, button);
-    }
-    function ajaxProcessToggle(tablename, field, id, button)
-    {
+        $(focused).find('i').removeClass('process-icon-download').addClass('process-icon-loading');
         $.ajax({
             type: 'post',
             dataType: 'json',
-            data:
-            {
+            data: {
+                ajax: true,
+                action: 'importDocument'
+            },
+            success: function(response) {
+                $(focused).find('i').removeClass('process-icon-loading').addClass('process-icon-download');
+                if (response.result) {
+                    $.growl.notice({
+                        title: '{l s='Operation done.' mod='mpstock'}',
+                        message: '{l s='See report for better infos' mod='mpstock'}'
+                    });
+                    $('#info-report').text(response.message);
+                    $('#info-report-row').fadeIn();
+                } else {
+                    $.growl.warning({
+                        title: '{l s='Failed import.' mod='mpstock'}',
+                        message: '{l s='See report for better infos' mod='mpstock'}'
+                    });
+                    $('#info-report').text(response.message);
+                    $('#info-report-row').fadeIn();
+                }
+            },
+            error: function(response) {
+                $(focused).find('i').removeClass('process-icon-loading').addClass('process-icon-download');
+                console.log("Ajax Call Error: ", response);
+            }
+        });
+    }
+    }
+
+    function importConfig() {
+        if (confirm('{l s='Are you sure you want to import old configuration?' mod='mpstock'}')) {
+        $.ajax({
+            type: 'post',
+            dataType: 'json',
+            data: {
+                ajax: true,
+                action: 'importConfig'
+            },
+            success: function(response) {
+                if (response.result) {
+                    $.growl.notice({
+                        title: '{l s='Operation done.' mod='mpstock'}',
+                        message: '{l s='See report for better infos' mod='mpstock'}'
+                    });
+                    $('#info-report').text(response.message);
+                    $('#info-report-row').fadeIn();
+                } else {
+                    $.growl.warning({
+                        title: '{l s='Failed import.' mod='mpstock'}',
+                        message: '{l s='See report for better infos' mod='mpstock'}'
+                    });
+                    $('#info-report').text(response.message);
+                    $('#info-report-row').fadeIn();
+                }
+            },
+            error: function(response) {
+                console.log("Ajax Call Error: ", response);
+            }
+        });
+    }
+    }
+
+    function toggleSign(button) {
+        var id = Number($(button).closest('tr').find('td:nth-child(2)').text());
+        ajaxProcessToggle('mpstock_mvt_reason_v2', 'sign', id, button);
+    }
+
+    function toggleTransform(button) {
+        var id = Number($(button).closest('tr').find('td:nth-child(2)').text());
+        ajaxProcessToggle('mpstock_mvt_reason_v2', 'transform', id, button);
+    }
+
+    function toggleDeleted(button) {
+        var id = Number($(button).closest('tr').find('td:nth-child(2)').text());
+        ajaxProcessToggle('mpstock_mvt_reason_v2', 'deleted', id, button);
+    }
+
+    function ajaxProcessToggle(tablename, field, id, button) {
+        $.ajax({
+            type: 'post',
+            dataType: 'json',
+            data: {
                 ajax: true,
                 action: 'toggle',
                 tablename: tablename,
                 field: field,
                 id: id
             },
-            success: function(response)
-            {
+            success: function(response) {
                 $(button)
                     .removeClass(response.removeClass)
                     .addClass(response.addClass)
                     .css('color', response.color);
             },
-            error: function(response)
-            {
+            error: function(response) {
                 console.log("ajax error: ", response);
             }
         });
     }
-    function loadDocument()
-    {
+
+    function loadDocument() {
         if (confirm('{l s='Load selected file?' mod='mpstock'}')) {
-            var file = $('#document_filename')[0].files[0];
-            var upload = new Upload(file);
+        var file = $('#document_filename')[0].files[0];
+        var upload = new Upload(file);
 
-            // maby check size or type here with upload.getSize() and upload.getType()
+        // maby check size or type here with upload.getSize() and upload.getType()
 
-            // execute upload
-            upload.doUpload();
-        }
+        // execute upload
+        upload.doUpload();
     }
-    function importDocumentXML()
-    {
+    }
+
+    function importDocumentXML() {
         if (confirm('{l s='Import selected document?' mod='mpstock'}') == false) {
-            return false;
-        }
-        var rows = $('#section-list .table.mpstock_product>tbody>tr');
-        var data_rows = [];
-        $(rows).each(function(){
-            if ($(this).find('input[type="checkbox"]').is(":checked")) {
-                var row = {
-                    'id_supplier': Number($(this).find('td:nth-child(2)').text()),
-                    'ean13': String($(this).find('td:nth-child(4)').text()).trim(),
-                    'reference': String($(this).find('td:nth-child(5)').text()).trim(),
-                    'id_product': Number($(this).find('td:nth-child(6)').text()),
-                    'id_product_attribute': Number($(this).find('td:nth-child(7)').text()),
-                    'qty': String($(this).find('td:nth-child(9)').text()).trim(),
-                    'sign': (String($(this).find('td:nth-child(9)').text()).trim()<0)
-                };
-                data_rows.push(row);
-            }
-        });
-        $.ajax({
-            type: 'post',
-            dataType: 'json',
-            data:
-            {
-                ajax: true,
-                action: 'importFormattedDocumentXML',
-                rows: data_rows,
-                number: $('#number_document').val(),
-                date: $('#date_document').val(),
-                type: $('#id_mpstock_mvt_reason').val(),
-                id_supplier: $('id_supplier').val()
-            },
-            success: function(response)
-            {
-                var i=0;
-                var chk = $('#section-list .table.mpstock_product>tbody')
-                    .find('input[type="checkbox"]:checked')
-                    .closest('td');
-                $(chk).each(function(){
-                    var span = $(this).closest('tr').find('td:nth-child(10)>span');
-                    if (response.rows.result[i]) {
-                        $(this).css('background-color', '#72C279');
-                    } else {
-                        $(this).css('background-color', '#E08F95');
-                    }
-                    var stock = response.rows.stock[i];
-                    if (stock==0) {
-                        $(span).css('color', '#555555');
-                    }else if(stock<0) {
-                        $(span).css('color', '#E08F95');
-                    } else {
-                        $(span).css('color', '#72C279');
-                    }
-                    $(span).html(stock);
-                    i++;
-                });
-                $.growl.notice({
-                    'title': '{l s='Import document' mod='mpstock'}',
-                    'message': '{l s='Operation done' mod='mpstock'}'
-                });
-            }
-            ,error: function(response)
-            {
-                console.log(response);
-            }
-        });
+        return false;
     }
-    function saveRow()
-    {
+    var rows = $('#section-list .table.mpstock_product>tbody>tr');
+    var data_rows = [];
+    $(rows).each(function() {
+        if ($(this).find('input[type="checkbox"]').is(":checked")) {
+            var row = {
+                'id_supplier': Number($(this).find('td:nth-child(2)').text()),
+                'ean13': String($(this).find('td:nth-child(4)').text()).trim(),
+                'reference': String($(this).find('td:nth-child(5)').text()).trim(),
+                'id_product': Number($(this).find('td:nth-child(6)').text()),
+                'id_product_attribute': Number($(this).find('td:nth-child(7)').text()),
+                'qty': String($(this).find('td:nth-child(9)').text()).trim(),
+                'sign': (String($(this).find('td:nth-child(9)').text()).trim() < 0)
+            };
+            data_rows.push(row);
+        }
+    });
+    $.ajax({
+        type: 'post',
+        dataType: 'json',
+        data: {
+            ajax: true,
+            action: 'importFormattedDocumentXML',
+            rows: data_rows,
+            number: $('#number_document').val(),
+            date: $('#date_document').val(),
+            type: $('#id_mpstock_mvt_reason').val(),
+            id_supplier: $('id_supplier').val()
+        },
+        success: function(response) {
+            var i = 0;
+            var chk = $('#section-list .table.mpstock_product>tbody')
+                .find('input[type="checkbox"]:checked')
+                .closest('td');
+            $(chk).each(function() {
+                var span = $(this).closest('tr').find('td:nth-child(10)>span');
+                if (response.rows.result[i]) {
+                    $(this).css('background-color', '#72C279');
+                } else {
+                    $(this).css('background-color', '#E08F95');
+                }
+                var stock = response.rows.stock[i];
+                if (stock == 0) {
+                    $(span).css('color', '#555555');
+                } else if (stock < 0) {
+                    $(span).css('color', '#E08F95');
+                } else {
+                    $(span).css('color', '#72C279');
+                }
+                $(span).html(stock);
+                i++;
+            });
+            $.growl.notice({
+                'title': '{l s='Import document' mod='mpstock'}',
+                'message': '{l s='Operation done' mod='mpstock'}'
+            });
+        },
+        error: function(response) {
+            console.log(response);
+        }
+    });
+    }
+
+    function saveRow() {
         var active_elem = document.activeElement;
         var row = $(active_elem).closest('.list-group-item');
         var doc = $(row).closest('tr').prev();
         var obj = {
-            'id' : $(row).find('input[name="id_mpstock_product"]').val(),
-            'id_document' : String($(doc).find('td:nth-child(2)').text()).trim(),
-            'id_movement' : String($(doc).find('td:nth-child(3)').text()).trim(),
-            'id_product' : $(row).find('input[name="id_product"]').val(),
-            'id_product_attribute' : $(row).find('input[name="id_product_attribute"]').val(),
-            'qty' : $(row).find('input[name="usable_quantity"]').val(),
-            'price' : $(row).find('input[name="price_te"]').val(),
-            'wholesale_price' : $(row).find('input[name="wholesale_price_te"]').val(),
+            'id': $(row).find('input[name="id_mpstock_product"]').val(),
+            'id_document': String($(doc).find('td:nth-child(2)').text()).trim(),
+            'id_movement': String($(doc).find('td:nth-child(3)').text()).trim(),
+            'id_product': $(row).find('input[name="id_product"]').val(),
+            'id_product_attribute': $(row).find('input[name="id_product_attribute"]').val(),
+            'qty': $(row).find('input[name="usable_quantity"]').val(),
+            'price': $(row).find('input[name="price_te"]').val(),
+            'wholesale_price': $(row).find('input[name="wholesale_price_te"]').val(),
         };
         $.ajax({
             type: 'post',
             dataType: 'json',
-            data:
-            {
+            data: {
                 ajax: true,
                 action: 'saveDocumentRow',
                 row: obj
             },
-            success: function(response)
-            {
+            success: function(response) {
                 $(doc).find('td:nth-child(8)').text(response.tot_qty);
                 $(doc).find('td:nth-child(9)').text(response.tot_document_te);
                 $(doc).find('td:nth-child(10)').text(response.tot_document_taxes);
                 $(doc).find('td:nth-child(11)').text(response.tot_document_ti);
                 $(row).closest('tr').remove();
-            }
-            ,error: function(response)
-            {
+            },
+            error: function(response) {
                 console.log(response);
             }
         });
     }
 
-    function activatePane(elem=null)
-    {
+    function activatePane(elem = null) {
         event.preventDefault();
-        if (elem==null) {
-            
+        if (elem == null) {
+
             var elem = document.activeElement;
         } else {
             //todo

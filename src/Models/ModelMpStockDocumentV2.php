@@ -20,7 +20,7 @@
 
 use MpSoft\MpStock\Helpers\ParseXml;
 
-class ModelMpStockDocument extends ObjectModel
+class ModelMpStockDocumentV2 extends ObjectModel
 {
     public $id_shop;
     public $number_document;
@@ -29,14 +29,14 @@ class ModelMpStockDocument extends ObjectModel
     public $id_supplier;
     public $tot_qty;
     public $tot_document_te;
-    public $tot_taxes;
+    public $tot_document_taxes;
     public $tot_document_ti;
     public $id_employee;
     public $date_add;
     public $date_upd;
 
     public static $definition = [
-        'table' => 'mpstock_document',
+        'table' => 'mpstock_document_v2',
         'primary' => 'id_mpstock_document',
         'fields' => [
             'id_shop' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => false],
@@ -57,7 +57,7 @@ class ModelMpStockDocument extends ObjectModel
     public function countAllResults()
     {
         $db = Db::getInstance();
-        $sql = 'SELECT COUNT(*) as total FROM ' . _DB_PREFIX_ . 'mpstock_document';
+        $sql = 'SELECT COUNT(*) as total FROM ' . _DB_PREFIX_ . 'mpstock_document_v2';
         $result = (int) $db->getValue($sql);
 
         return $result;
@@ -151,7 +151,7 @@ class ModelMpStockDocument extends ObjectModel
             return 'Scegli un tipo di movimento';
         }
 
-        $mvtReason = new ModelMpStockMvtReason($mvtReasonId, $id_lang);
+        $mvtReason = new ModelMpStockMvtReasonV2($mvtReasonId, $id_lang);
         if (!Validate::isLoadedObject($mvtReason)) {
             return 'Tipo di movimento non valido';
         }
@@ -168,7 +168,7 @@ class ModelMpStockDocument extends ObjectModel
 
         $sql = new DbQuery();
         $sql->select('id_mpstock_document')
-            ->from('mpstock_document')
+            ->from('mpstock_document_v2')
             ->where('number_document = "' . pSQL($number_document) . '"')
             ->where('date_document = "' . pSQL($date_document) . '"');
         $id_document = (int) $db->getValue($sql);
@@ -181,7 +181,7 @@ class ModelMpStockDocument extends ObjectModel
             );
         }
 
-        $doc = new ModelMpStockDocument(null, $id_lang);
+        $doc = new ModelMpStockDocumentV2(null, $id_lang);
         $data = [
             'id_shop' => 0,
             'number_document' => $number_document,
@@ -270,7 +270,7 @@ class ModelMpStockDocument extends ObjectModel
                 'stock_quantity_after' => $stockQtyAfter,
             ];
 
-            $mov = new ModelMpStockMovement();
+            $mov = new ModelMpStockMovementV2();
             $mov->hydrate($data_row);
 
             try {
@@ -292,5 +292,52 @@ class ModelMpStockDocument extends ObjectModel
         }
 
         return true;
+    }
+
+    public static function truncate()
+    {
+        $table = self::$definition['table'];
+        $pfx = _DB_PREFIX_;
+        $sql = "TRUNCATE TABLE {$pfx}{$table}";
+
+        return Db::getInstance()->execute($sql);
+    }
+
+    public static function updateTable()
+    {
+        self::truncate();
+        $fields = [
+            'id_mpstock_document',
+            'id_shop',
+            'number_document',
+            'date_document',
+            'id_mpstock_mvt_reason',
+            'id_supplier',
+            'tot_qty',
+            'tot_document_te',
+            'tot_document_taxes',
+            'tot_document_ti',
+            'id_employee',
+            'date_add',
+            'date_upd',
+        ];
+        $fields_list = implode(',', $fields);
+        $pfx = _DB_PREFIX_;
+        $sql = "INSERT INTO {$pfx}mpstock_document_v2 "
+            . '(' . $fields_list . ') '
+            . "SELECT {$fields_list} FROM {$pfx}mpstock_document";
+        $errors = [];
+
+        try {
+            $result = Db::getInstance()->execute($sql);
+        } catch (\Throwable $th) {
+            $result = false;
+            $errors[] = $th->getMessage() . "\n" . $th->getLine() . "\n" . $th->getFile();
+        }
+
+        return [
+            'errors' => $errors,
+            'rows_affected' => \Db::getInstance()->Affected_Rows(),
+        ];
     }
 }

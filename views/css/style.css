@@ -1039,6 +1039,30 @@ table.no-space-split {
     align-items: stretch !important;
 }
 
+.d-flex {
+    display: flex !important;
+}
+
+.justify-content-center {
+    justify-content: center !important;
+}
+
+.justify-content-start {
+    justify-content: flex-start !important;
+}
+
+.justify-content-end {
+    justify-content: flex-end !important;
+}
+
+.justify-content-between {
+    justify-content: space-between !important;
+}
+
+.flex-grow-1 {
+    flex-grow: 1 !important;
+}
+
 .flex-column {
     flex-direction: column !important;
 }
@@ -1233,4 +1257,67 @@ table.no-space-split {
 
 .text-highlight {
     color: var(--highlight-color) !important;
+}
+
+/** Bootstrap autocomplete **/
+.ui-autocomplete {
+    max-height: 10em;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    float: left;
+    display: none;
+    min-width: 160px;
+    _width: 160px;
+    padding: 4px 0;
+    margin: 2px 0 0 0;
+    list-style: none;
+    background-color: #ffffff;
+    border-color: #ccc;
+    border-color: rgba(0, 0, 0, 0.2);
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+}
+.ui-menu-item > a.ui-corner-all {
+    display: block;
+    padding: 3px 15px;
+    clear: both;
+    font-weight: normal;
+    line-height: 18px;
+    color: #555555;
+    white-space: nowrap;
+}
+&.ui-state-hover,
+&.ui-state-active {
+    color: #ffffff;
+    text-decoration: none;
+    background-color: #0088cc;
+    border-radius: 0px !important;
+    -webkit-border-radius: 0px !important;
+    -moz-border-radius: 0px !important;
+    background-image: none !important;
+}
+
+.ui-autocomplete-loading {
+    background: white url("/modules/mpstockv2/views/img/spinner.gif") right center no-repeat !important;
+    background-size: 28px auto !important;
+}
+
+.ui-autocomplete-input:after {
+    content: "\f110";
+    font-family: "FontAwesome";
+    font-weight: 900;
+    animation: fa-spin 2s infinite linear;
+    position: relative;
+    left: -20px;
+    top: 0px;
 }

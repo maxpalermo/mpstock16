@@ -19,8 +19,9 @@
  */
 
 use MpSoft\MpStock\Helpers\ParseXml;
+use MpSoft\MpStockV2\Helpers\Response;
 
-class AdminMpStockImportController extends ModuleAdminController
+class AdminMpStockConfigController extends ModuleAdminController
 {
     protected $mvtReasons = [];
 
@@ -28,7 +29,7 @@ class AdminMpStockImportController extends ModuleAdminController
     {
         $this->bootstrap = true;
         $this->table = 'mpstock_document_v2';
-        $this->className = 'ModelMpStockDocumentV2';
+        $this->className = 'ModelMpStockMvtReasonV2';
         $this->lang = false;
         $this->context = Context::getContext();
         $this->addRowAction('edit');
@@ -48,11 +49,21 @@ class AdminMpStockImportController extends ModuleAdminController
     public function setMedia()
     {
         parent::setMedia();
+        $this->addJqueryUI('ui.datepicker');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
+        $this->addJqueryPlugin('autocomplete');
+        $this->addJqueryUI('ui.autocomplete');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/showGrowlMessages.js');
     }
 
     public function initContent()
     {
-        $tpl_path = $this->getTemplatePath() . 'import/ImportDocument.tpl';
+        $tpl_path = $this->getTemplatePath() . 'config/config.tpl';
         $tpl = $this->context->smarty->createTemplate($tpl_path);
         $tpl->assign([
             'admin_controller_url' => $this->context->link->getAdminLink($this->controller_name),
@@ -63,6 +74,78 @@ class AdminMpStockImportController extends ModuleAdminController
         $this->content = $content;
 
         return parent::initContent();
+    }
+
+    public function ajaxProcessGetMvtReasonsList()
+    {
+        $start = (int) Tools::getValue('start');
+        $length = (int) Tools::getValue('length');
+        $search = Tools::getValue('search')['value'];
+        $draw = (int) Tools::getValue('draw');
+        $columns = Tools::getValue('columns');
+        $order = Tools::getValue('order');
+
+        $model = new ModelMpStockMvtReasonV2();
+        $mvtReasons = $model->dataTable($start, $length, $columns, $order);
+
+        Response::json(
+            [
+                'draw' => $draw,
+                'recordsTotal' => $mvtReasons['totalRecords'],
+                'recordsFiltered' => $mvtReasons['totalFiltered'],
+                'data' => $mvtReasons['data'],
+            ]
+        );
+    }
+
+    public function ajaxProcessGet()
+    {
+        $id = (int) Tools::getValue('id_mpstock_mvt_reason');
+        $id_lang = Context::getContext()->language->id;
+        $mvtReason = new ModelMpStockMvtReasonV2($id, $id_lang);
+        $fields = $mvtReason->getFields();
+        $fields['name'] = $mvtReason->name;
+
+        Response::json($fields);
+    }
+
+    public function ajaxProcessSave()
+    {
+        $id_lang = Context::getContext()->language->id;
+        $id = (int) Tools::getValue('reason_code');
+        $name = Tools::getValue('reason_name');
+        $sign = (int) Tools::getValue('sign');
+        $error = null;
+
+        $model = new ModelMpStockMvtReasonV2($id, $id_lang);
+        $model->name = $name;
+        $model->sign = $sign;
+        $model->active = true;
+
+        try {
+            if (Validate::isLoadedObject($model)) {
+                $result = $model->update();
+            } else {
+                $model->force_id = $id;
+                $result = $model->add();
+            }
+        } catch (\Throwable $th) {
+            $error = sprintf('Errore %s durante il salvataggio', $th->getMessage());
+        }
+
+        if (!$result) {
+            $message = sprintf($this->module->l('Errore %s durante il salvataggio', get_class($this)), $error);
+        } else {
+            $message = sprintf($this->module->l('Salvataggio avvenuto con successo', get_class($this)), $error);
+        }
+
+        Response::json(
+            [
+                'success' => $result,
+                'message' => $message,
+                'error' => $error,
+            ]
+        );
     }
 
     public function ajaxProcessLoadFile()

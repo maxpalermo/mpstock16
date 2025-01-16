@@ -44,10 +44,10 @@
                         <td>{$movement.date_add}</td>
                         <td>{$movement.employee}</td>
                         <td>
-                            <a href="{$admin_controller_url}admin/mpstock/movements/edit/{$movement.id_mpstock_movement}" class="btn btn-primary btn-sm">
+                            <a href="{$admin_controller_url}admin/mpstockv2/movements/edit/{$movement.id_mpstock_movement}" class="btn btn-primary btn-sm">
                                 <i class="icon icon-edit"></i>
                             </a>
-                            <a href="{$admin_controller_url}admin/mpstock/movements/delete/{$movement.id_mpstock_movement}" class="btn btn-danger btn-sm">
+                            <a href="{$admin_controller_url}admin/mpstockv2/movements/delete/{$movement.id_mpstock_movement}" class="btn btn-danger btn-sm">
                                 <i class="icon icon-trash"></i>
                             </a>
                         </td>
@@ -189,7 +189,7 @@
             [1, "asc"]
         ],
         language: {
-            "url": "/modules/mpstock/views/js/plugins/datatables/datatables-it.json"
+            "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
         }
     });
     }

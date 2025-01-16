@@ -24,8 +24,8 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockTools.php';
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockTools.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockObjectModel.php';
 
 class MpStockImporterRowModel
 {

@@ -18,12 +18,15 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
 
-namespace MpSoft\MpStock\Helpers;
+namespace MpSoft\MpStockV2\Helpers;
 
-class InstallTab extends \Tab
+class InstallTab
 {
-    public static const HIDDEN_CLASS_NAME = 'hidden';
-    public static const EMPTY_CLASS_NAME = '';
+    public const HIDDEN_CLASS_NAME = 'hidden';
+    public const EMPTY_CLASS_NAME = '';
+
+    private $error = '';
+    private $tab = null;
 
     /**
      * Summary of __construct
@@ -36,22 +39,26 @@ class InstallTab extends \Tab
      */
     public function __construct($moduleName, $parentClassName, $tabClassName, $menuLabel, $active = true)
     {
-        parent::__construct();
+        $tab = new \Tab();
 
-        $this->id_parent = $this->getParentId($parentClassName);
-        $this->class_name = $tabClassName;
+        $tab->id_parent = $this->getParentId($parentClassName);
+        $tab->class_name = $tabClassName;
         if (is_array($menuLabel)) {
             foreach (   $menuLabel as $langId => $label) {
-                $this->name[$langId] = $label;
+                $tab->name[$langId] = $label;
             }
         } else {
             foreach (\Language::getLanguages() as $lang) {
-                $this->name[$lang['id_lang']] = $menuLabel;
+                $tab->name[$lang['id_lang']] = $menuLabel;
             }
         }
-        $this->icon = 'icon-cogs';
-        $this->module = $moduleName;
-        $this->active = $active;
+        $tab->module = $moduleName;
+        $tab->icon = 'icon-cogs';
+        $tab->position = $tab->getNewLastPosition($tab->id_parent);
+        $tab->active = $active;
+        $tab->hide_host_mode = 0;
+
+        $this->tab = $tab;
     }
 
     public function getParentId($name)
@@ -60,16 +67,19 @@ class InstallTab extends \Tab
             return -1;
         }
 
-        if ($name == self::EMPTY_CLASS_NAME) {
-            return 0;
-        }
-
-        return (int) parent::getIdFromClassName($name);
+        return (int) \Tab::getIdFromClassName($name);
     }
 
     public function install()
     {
-        return $this->add();
+        try {
+            $result = $this->tab->add();
+        } catch (\Throwable $th) {
+            $this->error = $th->getMessage();
+            $result = false;
+        }
+
+        return $result;
     }
 
     public static function installRoot($moduleName, $tabClassName, $menuLabel, $active = true)
@@ -97,5 +107,10 @@ class InstallTab extends \Tab
         $tab = new \Tab($id_tab);
 
         return $tab->delete();
+    }
+
+    public function getError()
+    {
+        return $this->error;
     }
 }

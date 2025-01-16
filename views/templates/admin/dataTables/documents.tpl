@@ -82,7 +82,7 @@
                 {
                     data: "id_mpstock_document",
                     render: function(data, type, row) {
-                        return '<a href="{$base_url}admin/mpstock/documents/edit/' + data + '">' + data + '</a>';
+                        return '<a href="{$base_url}admin/mpstockv2/documents/edit/' + data + '">' + data + '</a>';
                     },
                     name: "a.id_mpstock_document"
                 },
@@ -224,7 +224,7 @@
                 [1, "asc"]
             ],
             language: {
-                "url": "/modules/mpstock/views/js/plugins/datatables/datatables-it.json"
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
             }
         });
     }

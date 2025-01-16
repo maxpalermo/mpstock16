@@ -37,7 +37,7 @@
     }
 
     .ui-autocomplete-loading {
-        background: white url('/modules/mpstock/views/img/ajax-loader.gif') right center no-repeat;
+        background: white url('/modules/mpstockv2/views/img/ajax-loader.gif') right center no-repeat;
     }
 
     .ui-autocomplete-no-results {

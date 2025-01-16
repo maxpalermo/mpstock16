@@ -43,7 +43,7 @@ class MpStockDocumentObjectModel extends ObjectModel
     public $id_lang;
 
     public static $definition = array(
-        'table' => 'mpstock_document',
+        'table' => 'mpstock_document_v2',
         'primary' => 'id_mpstock_document',
         'multilang' => false,
         'fields' => array(
@@ -282,14 +282,14 @@ class MpStockDocumentObjectModel extends ObjectModel
 
     public static function getPath()
     {
-        return _PS_MODULE_DIR_.'mpstock/';
+        return _PS_MODULE_DIR_.'mpstockv2/';
     }
 
     public static function getURL()
     {
         $shop = new Shop(Context::getContext()->shop->id);
         $url = $shop->getBaseURI();
-        return $url.'modules/mpstock/';
+        return $url.'modules/mpstockv2/';
     }
 
     public function getEmployee()

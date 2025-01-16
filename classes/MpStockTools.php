@@ -49,7 +49,7 @@ Class MpStockTools
     {
         /** Get Template path if not set **/
         if (empty($templatePath)) {
-            return _PS_MODULE_DIR_.'mpstock/views/templates/admin/';
+            return _PS_MODULE_DIR_.'mpstockv2/views/templates/admin/';
         } else {
             return $templatePath;
         }

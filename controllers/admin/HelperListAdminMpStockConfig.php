@@ -28,7 +28,7 @@ ini_set('max_execution_time', 300); //300 seconds = 5 minutes
 ini_set('post_max_size', '128M');
 ini_set('upload_max_filesize', '128M');
 
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockMvtReasonObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockMvtReasonObjectModel.php';
 
 class HelperListAdminMpStockConfig extends HelperList
 {
@@ -210,7 +210,7 @@ class HelperListAdminMpStockConfig extends HelperList
 
         $sql->select('c.*')
             ->select('cl.name')
-            ->from('mpstock_mvt_reason', 'c')
+            ->from('mpstock_mvt_reason_v2', 'c')
             ->innerJoin('mpstock_mvt_reason_lang', 'cl', 'c.id_mpstock_mvt_reason=cl.id_mpstock_mvt_reason')
             ->where('cl.id_lang='.(int)$this->id_lang);
 

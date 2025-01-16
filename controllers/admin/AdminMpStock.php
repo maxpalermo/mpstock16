@@ -24,26 +24,26 @@
  *  International Registered Trademark & Property of mpSOFT
  */
 
-require_once _PS_MODULE_DIR_ . 'mpstock/models/autoload.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/models/autoload.php';
 
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminImport.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminImportXML.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminImportCSV.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperForm.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperListDocuments.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperListMovements.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperFormAddMovement.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperListAddMovement.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperListAddMovementExchange.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockAdminHelperFormAddQuickMovement.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockObjectModelImport.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockObjectModel.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/classes/MpStockTools.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminImport.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminImportXML.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminImportCSV.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperForm.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperListDocuments.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperListMovements.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperFormAddMovement.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperListAddMovement.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperListAddMovementExchange.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockAdminHelperFormAddQuickMovement.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockObjectModelImport.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockObjectModel.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/classes/MpStockTools.php';
 
-require_once _PS_MODULE_DIR_ . 'mpstock/controllers/admin/HelperListAdminMpStockDocument.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/controllers/admin/HelperListAdminMpStockProduct.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/controllers/admin/HelperListAdminMpStockConfig.php';
-require_once _PS_MODULE_DIR_ . 'mpstock/controllers/admin/HelperFormAdminMpStockConfig.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/controllers/admin/HelperListAdminMpStockDocument.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/controllers/admin/HelperListAdminMpStockProduct.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/controllers/admin/HelperListAdminMpStockConfig.php';
+require_once _PS_MODULE_DIR_ . 'mpstockv2/controllers/admin/HelperFormAdminMpStockConfig.php';
 
 class AdminMpStockController extends ModuleAdminController
 {
@@ -1136,7 +1136,7 @@ class AdminMpStockController extends ModuleAdminController
     public function ajaxProcessImportConfig()
     {
         $db = Db::getInstance();
-        $db->execute('DELETE FROM ' . _DB_PREFIX_ . 'mpstock_mvt_reason');
+        $db->execute('DELETE FROM ' . _DB_PREFIX_ . 'mpstock_mvt_reason_v2');
         $db->execute('DELETE FROM ' . _DB_PREFIX_ . 'mpstock_mvt_reason_lang');
         $sql = 'SELECT * FROM ' . _DB_PREFIX_ . 'mp_stock_type_movement WHERE id_lang=' . (int) $this->id_lang;
         $result = $db->executeS($sql);
@@ -1401,7 +1401,7 @@ class AdminMpStockController extends ModuleAdminController
         $sql = new DbQueryCore();
         $sql->select('p.*')
             ->from('mpstock_product', 'p')
-            ->innerJoin('mpstock_document', 'd', 'd.id_mpstock_document=p.id_document')
+            ->innerJoin('mpstock_document_v2', 'd', 'd.id_mpstock_document=p.id_document')
             ->where('d.id_shop=' . (int) $this->id_shop)
             ->where('d.id_mpstock_document=' . (int) $id_document)
             ->orderBy('p.id_mpstock_product');
@@ -2285,7 +2285,7 @@ class AdminMpStockController extends ModuleAdminController
         $sql = new DbQueryCore();
 
         $subsql->select('id_mpstock_document')
-            ->from('mpstock_document');
+            ->from('mpstock_document_v2');
 
         $sql->select('*')
             ->from('mp_stock')

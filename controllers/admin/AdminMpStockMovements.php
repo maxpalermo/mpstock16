@@ -17,6 +17,9 @@
  * @copyright Since 2016 Massimiliano Palermo
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
+
+use MpSoft\MpStock\Helpers\GetProductAttributeCombination;
+
 class AdminMpStockMovementsController extends ModuleAdminController
 {
     protected $mvtSigns;
@@ -29,7 +32,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $this->bootstrap = true;
         $this->table = 'mpstock_product';
         $this->identifier = 'id_mpstock_product';
-        $this->className = 'ModelMpStockMovement';
+        $this->className = 'ModelMpStockMovementV2';
         $this->lang = false;
         $this->deleted = false;
         $this->explicitSelect = true;
@@ -44,7 +47,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $this->employees = $this->getEmployees();
 
         $this->_select = 'd.number_document, d.date_document,pl.name, \'\' as remain';
-        $this->_join = 'LEFT JOIN ' . _DB_PREFIX_ . 'mpstock_document d ON (a.id_document = d.id_mpstock_document)';
+        $this->_join = 'LEFT JOIN ' . _DB_PREFIX_ . 'mpstock_document_v2 d ON (a.id_document = d.id_mpstock_document)';
         $this->_join .= ' LEFT JOIN ' . _DB_PREFIX_ . 'product_lang pl ON (a.id_product = pl.id_product AND pl.id_lang = ' . (int) $this->context->language->id . ')';
 
         parent::__construct();
@@ -57,12 +60,12 @@ class AdminMpStockMovementsController extends ModuleAdminController
         parent::setMedia();
 
         $this->addJqueryUI('ui.datepicker');
-        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.css');
-        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.js');
-        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.css');
-        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.js');
-        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/showToastify.js');
-        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/css/style.css');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
         $this->addJqueryPlugin('autocomplete');
         $this->addJqueryUI('ui.autocomplete');
     }
@@ -70,7 +73,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
     public function initPageHeaderToolbar()
     {
         $this->page_header_toolbar_btn['new_document'] = [
-            'href' => static::$currentIndex . '&add' . 'mpstock_document' . '&token=' . $this->token,
+            'href' => static::$currentIndex . '&add' . 'mpstock_document_v2' . '&token=' . $this->token,
             'desc' => $this->l('Nuovo documento'),
             'icon' => 'process-icon-new',
         ];
@@ -160,7 +163,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $db = Db::getInstance();
         $sql = new DbQuery();
         $sql->select('*')
-            ->from('mpstock_mvt_reason');
+            ->from('mpstock_mvt_reason_v2');
         $rows = $db->executeS($sql);
 
         $out = [];
@@ -176,7 +179,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $id_lang = (int) $this->context->language->id;
         $sql = new DbQuery();
         $sql->select('a.id_mpstock_mvt_reason, a.sign, b.name')
-            ->from('mpstock_mvt_reason', 'a')
+            ->from('mpstock_mvt_reason_v2', 'a')
             ->leftJoin('mpstock_mvt_reason_lang', 'b', 'a.id_mpstock_mvt_reason = b.id_mpstock_mvt_reason and b.id_lang=' . (int) $this->context->language->id)
             ->orderBy('b.name ASC');
 
@@ -353,12 +356,12 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $columns = Tools::getValue('columns');
         $order = Tools::getValue('order');
 
-        $model = new ModelMpStockMovement();
+        $model = new ModelMpStockMovementV2();
         $movements = $model->dataTable($start, $length, $columns, $order);
 
         foreach ($movements['data'] as &$row) {
-            $row['product_name'] = ModelMpStockMovement::getProductNameById($row['id_product']);
-            $row['product_combination'] = ModelMpStockMovement::getProductCombinationById($row['id_product'], $row['id_product_attribute']);
+            $row['product_name'] = ModelMpStockMovementV2::getProductNameById($row['id_product']);
+            $row['product_combination'] = ModelMpStockMovementV2::getProductCombinationById($row['id_product'], $row['id_product_attribute']);
             $row['actions'] = '';
         }
 
@@ -390,21 +393,9 @@ class AdminMpStockMovementsController extends ModuleAdminController
     public function ajaxProcessGetProductAttributes()
     {
         $id_product = (int) Tools::getValue('productId');
-        $sql = new DbQuery();
-        $sql->select('pa.id_product_attribute as value, GROUP_CONCAT(CONCAT(agl.name, ":", al.name) SEPARATOR ", ") as label')
-            ->from('product_attribute', 'pa')
-            ->leftJoin('product_attribute_combination', 'pac', 'pa.id_product_attribute = pac.id_product_attribute')
-            ->leftJoin('attribute', 'a', 'pac.id_attribute = a.id_attribute')
-            ->leftJoin('attribute_lang', 'al', 'a.id_attribute = al.id_attribute AND al.id_lang = ' . (int) $this->context->language->id)
-            ->leftJoin('attribute_group', 'ag', 'a.id_attribute_group = ag.id_attribute_group')
-            ->leftJoin('attribute_group_lang', 'agl', 'ag.id_attribute_group = agl.id_attribute_group AND agl.id_lang = ' . (int) $this->context->language->id)
-            ->where('pa.id_product = ' . $id_product)
-            ->groupBy('pa.id_product_attribute')
-            ->orderBy('pa.id_product_attribute ASC');
+        $combinations = GetProductAttributeCombination::getProductCombinations($id_product);
 
-        $result = Db::getInstance()->executeS($sql);
-
-        $this->response($result);
+        $this->response($combinations);
     }
 
     public function ajaxProcessGetCurrentStock()
@@ -432,7 +423,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $product = new Product($productId, false, $id_lang);
         $combination = new Combination($productAttributeId);
 
-        $model = new ModelMpStockMovement();
+        $model = new ModelMpStockMovementV2();
         $model->id_document = null;
         $model->ref_movement = null;
         $model->id_warehouse = null;

@@ -26,9 +26,9 @@ class AdminMpStockDocumentsController extends ModuleAdminController
     public function __construct()
     {
         $this->bootstrap = true;
-        $this->table = 'mpstock_document';
+        $this->table = 'mpstock_document_v2';
         $this->identifier = 'id_mpstock_document';
-        $this->className = 'ModelMpStockDocument';
+        $this->className = 'ModelMpStockDocumentV2';
         $this->lang = false;
         $this->deleted = false;
         $this->explicitSelect = true;
@@ -56,12 +56,12 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         parent::setMedia();
 
         $this->addJqueryUI('ui.datepicker');
-        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.css');
-        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/datatables/datatables.min.js');
-        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.css');
-        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/toastify.js');
-        $this->addJS(_MODULE_DIR_ . 'mpstock/views/js/plugins/toastify/showToastify.js');
-        $this->addCSS(_MODULE_DIR_ . 'mpstock/views/css/style.css');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
         $this->addJqueryPlugin('autocomplete');
         $this->addJqueryUI('ui.autocomplete');
     }
@@ -103,7 +103,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $columns = Tools::getValue('columns');
         $order = Tools::getValue('order');
 
-        $model = new ModelMpStockDocument();
+        $model = new ModelMpStockDocumentV2();
         $documents = $model->dataTable($start, $length, $columns, $order);
 
         $this->response(
@@ -128,7 +128,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
             }
         }
 
-        $movements = ModelMpStockMovement::getMovementsByIdDocument($id_invoice);
+        $movements = ModelMpStockMovementV2::getMovementsByIdDocument($id_invoice);
         $tpl = $this->context->smarty->createTemplate(
             $this->getTemplatePath() . 'documents/document-details.tpl',
             $this->context->smarty
@@ -224,7 +224,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
 
         $product = new Product($productId, false, $id_lang);
         $combination = new Combination($productAttributeId);
-        $document = new ModelMpStockDocument($documentId);
+        $document = new ModelMpStockDocumentV2($documentId);
         if (!Validate::isLoadedObject($document)) {
             $this->response([
                 'success' => false,
@@ -237,7 +237,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $document_number = $document->number_document;
         $document_date = $document->date_document;
 
-        $model = new ModelMpStockMovement();
+        $model = new ModelMpStockMovementV2();
         $model->id_document = $documentId;
         $model->id_warehouse = 0;
         $model->id_supplier = $id_supplier;
@@ -292,7 +292,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $id_lang = (int) $this->context->language->id;
         $sql = new DbQuery();
         $sql->select('a.id_mpstock_mvt_reason, a.sign, b.name')
-            ->from('mpstock_mvt_reason', 'a')
+            ->from('mpstock_mvt_reason_v2', 'a')
             ->leftJoin('mpstock_mvt_reason_lang', 'b', 'a.id_mpstock_mvt_reason = b.id_mpstock_mvt_reason and b.id_lang=' . (int) $this->context->language->id)
             ->orderBy('b.name ASC');
 

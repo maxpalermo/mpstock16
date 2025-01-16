@@ -73,3 +73,8 @@
     color: #ebe09b;
     content: "\f080";
 }
+
+#subtab-AdminMpStockConfig a:before {
+    color: #ebe09b;
+    content: "\f085";
+}

@@ -24,9 +24,9 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockObjectModelImport.php';
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockObjectModel.php';
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockImporterRowModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockObjectModelImport.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockImporterRowModel.php';
 
 
 Class MpStockAdminImportXML

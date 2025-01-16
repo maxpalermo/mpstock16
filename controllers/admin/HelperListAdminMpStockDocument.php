@@ -24,8 +24,8 @@
  *  International Registered Trademark & Property of mpSOFT
  */
 
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockDocumentObjectModel.php';
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockProductObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockDocumentObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockProductObjectModel.php';
 
 class HelperListAdminMpStockDocument extends HelperList
 {
@@ -208,7 +208,7 @@ class HelperListAdminMpStockDocument extends HelperList
         $sql = new DbQueryCore();
         $sql->select('m.*')
             ->select('ml.name')
-            ->from('mpstock_mvt_reason', 'm')
+            ->from('mpstock_mvt_reason_v2', 'm')
             ->innerJoin('mpstock_mvt_reason_lang', 'ml', 'ml.id_mpstock_mvt_reason=m.id_mpstock_mvt_reason')
             ->where('m.deleted=0')
             ->orderBy('ml.name');
@@ -293,7 +293,7 @@ class HelperListAdminMpStockDocument extends HelperList
             ->select('concat(e.firstname,\' \',e.lastname) as employee')
             ->select('ml.id_mpstock_mvt_reason')
             ->select('ml.name as movement')
-            ->from('mpstock_document', 'd')
+            ->from('mpstock_document_v2', 'd')
             ->leftJoin('supplier', 's', 's.id_supplier=d.id_supplier')
             ->innerJoin('employee', 'e', 'e.id_employee=d.id_employee')
             ->innerJoin('mpstock_mvt_reason_lang', 'ml', 'ml.id_mpstock_mvt_reason=d.id_mpstock_mvt_reason')
@@ -407,7 +407,7 @@ class HelperListAdminMpStockDocument extends HelperList
     public function generateFormImport()
     {
         $form = new HelperForm();
-        $form->table = 'mpstock_document';
+        $form->table = 'mpstock_document_v2';
         $form->default_form_language = (int)Configuration::get('PS_LANG_DEFAULT');
         $form->allow_employee_form_lang = (int)Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG');
         $form->submit_action = 'submitLoadXML';
@@ -575,7 +575,7 @@ class HelperListAdminMpStockDocument extends HelperList
     {
         $db = Db::getInstance();
         $sql = "select count(*) "
-            ." from "._DB_PREFIX_."mpstock_mvt_reason "
+            ." from "._DB_PREFIX_."mpstock_mvt_reason_v2 "
             ." where id_mpstock_mvt_reason=".(int)$type;
         return (boolean)$db->getValue($sql);
     }
@@ -596,7 +596,7 @@ class HelperListAdminMpStockDocument extends HelperList
     {
         $db = Db::getInstance();
         $sql = "select sign "
-            ." from "._DB_PREFIX_."mpstock_mvt_reason "
+            ." from "._DB_PREFIX_."mpstock_mvt_reason_v2 "
             ." where id_mpstock_mvt_reason=".(int)$type;
         $sign = (int)$db->getValue($sql);
         if ($sign == 0) {

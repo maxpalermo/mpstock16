@@ -1,4 +1,4 @@
-{**
+{*
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -22,7 +22,7 @@
 <div class="panel">
     <div class="panel-heading">
         <i class="icon icon-cogs"></i>
-        <span>Elenco moviomenti</span>
+        <span>Elenco movimenti</span>
     </div>
     <div class="panel-body">
         <table class="table table-striped table-bordered table-hover" id="table-movements">
@@ -51,8 +51,8 @@
                 <tr>
                     <th data-field=""></th>
                     <th data-field="id_mpstock_movement"></th>
-                    <th data-field="number_movement"></th>
-                    <th data-field="date_movement"></th>
+                    <th data-field="document_number"></th>
+                    <th data-field="document_date"></th>
                     <th data-field="mvt_reason"></th>
                     <th data-field="supplier"></th>
                     <th data-field="product_name"></th>
@@ -133,17 +133,20 @@
                 {
                     data: "id_mpstock_movement",
                     render: function(data, type, row) {
-                        return '<a href="{$base_url}admin/mpstock/movements/edit/' + data + '">' + data + '</a>';
+                        return '<a href="{$base_url}admin/mpstockv2/movements/edit/' + data + '">' + data + '</a>';
                     },
                     name: "a.id_mpstock_movement"
                 },
                 {
-                    data: "number_document",
-                    name: "d.number_document"
+                    data: "document_number",
+                    name: "a.document_number"
                 },
                 {
-                    data: "date_document",
-                    name: "d.date_document"
+                    data: "document_date",
+                    name: "a.document_date",
+                    render: function(data, type, row) {
+                        return moment(data).format('DD/MM/YYYY');
+                    },
                 },
                 {
                     data: "mvt_reason",
@@ -242,7 +245,7 @@
                         if (data_field) {
                             switch (data_field) {
                                 case "id_mpstock_movement":
-                                case "number_document":
+                                case "document_number":
                                 case "mvt_reason":
                                 case "supplier":
                                 case "product_name":
@@ -274,7 +277,7 @@
                                         }
                                     });
                                     break;
-                                case "date_movement":
+                                case "document_date":
                                 case "date_add":
                                     let datepicker = document.createElement('input');
                                     $(datepicker).attr('type', 'date').addClass('form-control');
@@ -316,7 +319,7 @@
                 [1, "asc"]
             ],
             language: {
-                "url": "/modules/mpstock/views/js/plugins/datatables/datatables-it.json"
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
             }
         });
     }

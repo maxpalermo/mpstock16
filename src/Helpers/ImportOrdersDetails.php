@@ -18,7 +18,7 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
 
-namespace MpSoft\MpStock\Helpers;
+namespace MpSoft\MpStockV2\Helpers;
 
 class ImportOrdersDetails
 {
@@ -26,8 +26,6 @@ class ImportOrdersDetails
     protected $context;
     protected $id_lang;
     protected $controller;
-
-    public const MOVEMENT_WEB_SELL = 113;
 
     public function __construct()
     {
@@ -90,8 +88,8 @@ class ImportOrdersDetails
         $success = [];
         $errors = [];
 
-        $record = $this->hydrate($orderDetail, self::MOVEMENT_WEB_SELL);
-        $model = new \ModelMpStockMovement();
+        $record = $this->hydrate($orderDetail, \MpStockV2::MPSTOCKV2_MVT_REASON_ID);
+        $model = new \ModelMpStockMovementV2();
         $model->hydrate($record);
 
         try {

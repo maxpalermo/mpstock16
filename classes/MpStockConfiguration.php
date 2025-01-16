@@ -24,7 +24,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-require_once _PS_MODULE_DIR_.'mpstock/mpstock.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/mpstock.php';
 
 class MpStockConfiguration extends ObjectModel
 {

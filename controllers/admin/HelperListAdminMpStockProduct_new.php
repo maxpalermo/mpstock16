@@ -24,8 +24,8 @@
  *  International Registered Trademark & Property of mpSOFT
  */
 
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockDocumentObjectModel.php';
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockProductObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockDocumentObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockProductObjectModel.php';
 
 class HelperListAdminMpStockProduct extends HelperList
 {
@@ -289,7 +289,7 @@ class HelperListAdminMpStockProduct extends HelperList
             ->select("'movement' as `type_row`")
             ->from('mpstock_product', 'p')
             ->innerJoin('product_lang', 'pl', 'pl.id_product=p.id_product')
-            ->leftJoin('mpstock_document', 'doc', 'doc.id_mpstock_document=p.id_mpstock_document')
+            ->leftJoin('mpstock_document_v2', 'doc', 'doc.id_mpstock_document=p.id_mpstock_document')
             ->where('pl.id_lang='.(int)$this->id_lang);
 
         $sql2->select('distinct p.id_order_detail')
@@ -466,7 +466,7 @@ class HelperListAdminMpStockProduct extends HelperList
         $db = Db::getInstance();
         if ($type == 'movement') {
             $sql = "select number_document, date_document from "
-                ._DB_PREFIX_."mpstock_document where id_mpstock_document=".(int)$id_document;
+                ._DB_PREFIX_."mpstock_document_v2 where id_mpstock_document=".(int)$id_document;
         } elseif ($type == 'order') {
             $sql = "select reference as number_document, date_add as date_document from "
             ._DB_PREFIX_."orders where id_order=".(int)$id_document;

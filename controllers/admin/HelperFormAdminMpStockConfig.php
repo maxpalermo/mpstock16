@@ -24,7 +24,7 @@
  *  International Registered Trademark & Property of mpSOFT
  */
 
-require_once _PS_MODULE_DIR_.'mpstock/classes/MpStockMvtReasonObjectModel.php';
+require_once _PS_MODULE_DIR_.'mpstockv2/classes/MpStockMvtReasonObjectModel.php';
 
 class HelperFormAdminMpStockConfig extends HelperForm
 {

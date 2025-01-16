@@ -39,7 +39,7 @@ class MpStockMvtReasonObjectModel extends ObjectModel
     public $module;
 
     public static $definition = array(
-        'table' => 'mpstock_mvt_reason',
+        'table' => 'mpstock_mvt_reason_v2',
         'primary' => 'id_mpstock_mvt_reason',
         'multilang' => true,
         'fields' => array(
@@ -285,14 +285,14 @@ class MpStockMvtReasonObjectModel extends ObjectModel
 
     public static function getPath()
     {
-        return _PS_MODULE_DIR_.'mpstock/';
+        return _PS_MODULE_DIR_.'mpstockv2/';
     }
 
     public static function getURL()
     {
         $shop = new Shop(Context::getContext()->shop->id);
         $url = $shop->getBaseURI();
-        return $url.'modules/mpstock/';
+        return $url.'modules/mpstockv2/';
     }
 
     public function getEmployee()

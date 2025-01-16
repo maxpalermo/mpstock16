@@ -295,14 +295,14 @@ class MpStockProductObjectModel extends ObjectModel
 
     public static function getPath()
     {
-        return _PS_MODULE_DIR_.'mpstock/';
+        return _PS_MODULE_DIR_.'mpstockv2/';
     }
 
     public static function getURL()
     {
         $shop = new Shop(Context::getContext()->shop->id);
         $url = $shop->getBaseURI();
-        return $url.'modules/mpstock/';
+        return $url.'modules/mpstockv2/';
     }
 
     public function getEmployee()
@@ -444,7 +444,7 @@ class MpStockProductObjectModel extends ObjectModel
         $db=Db::getInstance();
         $sql = new DbQueryCore();
         $sql->select('sign')
-            ->from('mpstock_mvt_reason')
+            ->from('mpstock_mvt_reason_v2')
             ->where('id_mpstock_mvt_reason='.(int)$id_movement);
         $sign = (int)$db->getValue($sql);
         if ($sign) {
@@ -508,7 +508,7 @@ class MpStockProductObjectModel extends ObjectModel
         $row = $db->getRow($sql);
         if ($row) {
             $db->update(
-                'mpstock_document',
+                'mpstock_document_v2',
                 array(
                     'tot_qty' => $row['tot_qty'],
                     'tot_document_te' => $row['tot_price'],
@@ -520,7 +520,7 @@ class MpStockProductObjectModel extends ObjectModel
             $sql = new DbQueryCore();
             $sql->select('tot_qty')
                 ->select('tot_document_ti')
-                ->from('mpstock_document')
+                ->from('mpstock_document_v2')
                 ->where('id_mpstock_document='.(int)$this->id_document);
             $tots = $db->getRow($sql);
             return $tots;

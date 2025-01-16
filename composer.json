@@ -1,5 +1,5 @@
 {
-    "name": "mpsoft/mpstock",
+    "name": "mpsoft/mpstockv2",
     "description": "Manage stock quantities",
     "authors": [
         {
@@ -13,8 +13,8 @@
     },
     "autoload": {
         "psr-4": {
-            "MpSoft\\MpStock\\": "src/",
-            "MpSoft\\MpStock\\WebServices\\": "vendor/prestashop/prestashop-webservice-lib"
+            "MpSoft\\MpStockV2\\": "src/",
+            "MpSoft\\MpStockV2\\WebServices\\": "vendor/prestashop/prestashop-webservice-lib"
         },
         "classmap": [],
         "exclude-from-classmap": [],
