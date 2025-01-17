@@ -19,6 +19,7 @@
  */
 
 use MpSoft\MpStock\Helpers\ParseXml;
+use MpSoft\MpStockV2\Helpers\Response;
 
 class AdminMpStockImportController extends ModuleAdminController
 {
@@ -82,12 +83,14 @@ class AdminMpStockImportController extends ModuleAdminController
                 'content' => $parser->getDocumentContent(),
             ];
 
-            $this->response( $response);
+            Response::json($response);
         } else {
-            $this->response([
-                'success' => false,
-                'message' => $parser->getError(),
-            ]);
+            Response::json(
+                [
+                    'success' => false,
+                    'message' => $parser->getError(),
+                ]
+            );
         }
     }
 
@@ -105,15 +108,19 @@ class AdminMpStockImportController extends ModuleAdminController
         }
 
         if ($result === true) {
-            $this->response([
-                'success' => true,
-                'message' => $this->module->l('Importazione avvenuta con successo.', get_class($this)),
-            ]);
+            Response::json(
+                [
+                    'success' => true,
+                    'message' => $this->module->l('Importazione avvenuta con successo.', get_class($this)),
+                ]
+            );
         }
 
-        $this->response([
-            'success' => false,
-            'message' => $result,
-        ]);
+        Response::json(
+            [
+                'success' => false,
+                'message' => $result,
+            ]
+        );
     }
 }

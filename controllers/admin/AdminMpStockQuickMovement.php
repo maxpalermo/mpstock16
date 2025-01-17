@@ -20,6 +20,7 @@
 
 use MpSoft\MpStock\Helpers\GetProductAttributeCombination;
 use MpSoft\MpStock\Helpers\GetProductImage;
+use MpSoft\MpStockV2\Helpers\Response;
 
 class AdminMpStockQuickMovementController extends ModuleAdminController
 {
@@ -82,7 +83,7 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
         $ean13 = Tools::getValue('ean13', '');
 
         if (!$ean13) {
-            $this->response([
+            Response::json([
                 'id_product' => 0,
                 'id_product_attribute' => 0,
                 'name' => '',
@@ -102,7 +103,7 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
                 $productCombination = $productCombination['label'];
             }
 
-            $this->response([
+            Response::json([
                 'id_product' => $row['id_product'],
                 'id_product_attribute' => $row['id_product_attribute'],
                 'name' => "{$productName} - {$productCombination}",
@@ -111,7 +112,7 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
             ]);
         }
 
-        $this->response([
+        Response::json([
             'id_product' => 0,
             'id_product_attribute' => 0,
             'name' => '',
@@ -129,7 +130,7 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
         $mvtReason = new ModelMpStockMvtReasonV2($mvtReasonId, $id_lang);
 
         if (!Validate::isLoadedObject($mvtReason)) {
-            $this->response([
+            Response::json([
                 'success' => false,
                 'message' => sprintf(Tools::displayError('Movimento non valido: %s'), $mvtReasonId),
             ]);
@@ -172,7 +173,7 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
         try {
             $result = $model->add(false, true);
         } catch (\Throwable $th) {
-            $this->response([
+            Response::json([
                 'success' => false,
                 'message' => $th->getMessage(),
             ]);
@@ -181,7 +182,7 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
         StockAvailable::setQuantity($productId, $productAttributeId, $stockAfter);
         $currentStock = (int) StockAvailable::getQuantityAvailableByProduct($productId, $productAttributeId);
 
-        $this->response([
+        Response::json([
             'success' => (int) $result,
             'message' => sprintf(
                 'Movimento salvato.<br>Quantità attuale: <strong>%s</strong>',

@@ -17,6 +17,9 @@
  * @copyright Since 2016 Massimiliano Palermo
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
+
+use MpSoft\MpStockV2\Helpers\Response;
+
 class AdminMpStockDocumentsController extends ModuleAdminController
 {
     protected $mvtReasons;
@@ -106,7 +109,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $model = new ModelMpStockDocumentV2();
         $documents = $model->dataTable($start, $length, $columns, $order);
 
-        $this->response(
+        Response::json(
             [
                 'draw' => $draw,
                 'recordsTotal' => $documents['totalRecords'],
@@ -157,7 +160,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
             ];
 
         if ($ajax) {
-            $this->response($response);
+            Response::json($response);
         }
 
         return $response;
@@ -175,7 +178,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
 
         $result = Db::getInstance()->executeS($sql);
 
-        $this->response($result);
+        Response::json($result);
     }
 
     public function ajaxProcessGetProductAttributes()
@@ -195,7 +198,7 @@ class AdminMpStockDocumentsController extends ModuleAdminController
 
         $result = Db::getInstance()->executeS($sql);
 
-        $this->response($result);
+        Response::json($result);
     }
 
     public function ajaxProcessGetCurrentStock()
@@ -205,9 +208,11 @@ class AdminMpStockDocumentsController extends ModuleAdminController
 
         $stock = StockAvailable::getQuantityAvailableByProduct($id_product, $id_product_attribute);
 
-        $this->response([
-            'currentStock' => (int) $stock,
-        ]);
+        Response::json(
+            [
+                'currentStock' => (int) $stock,
+            ]
+        );
     }
 
     public function ajaxProcessSaveMovement()
@@ -226,11 +231,13 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         $combination = new Combination($productAttributeId);
         $document = new ModelMpStockDocumentV2($documentId);
         if (!Validate::isLoadedObject($document)) {
-            $this->response([
-                'success' => false,
-                'title' => $this->module->l('Salva Movimento', get_class($this)),
-                'message' => $this->module->l('Errore: Documento non trovato', get_class($this)),
-            ]);
+            Response::json(
+                [
+                    'success' => false,
+                    'title' => $this->module->l('Salva Movimento', get_class($this)),
+                    'message' => $this->module->l('Errore: Documento non trovato', get_class($this)),
+                ]
+            );
         }
 
         $id_supplier = (int) $document->id_supplier;
@@ -269,11 +276,13 @@ class AdminMpStockDocumentsController extends ModuleAdminController
             $message = $th->getMessage();
         }
 
-        $this->response([
-            'success' => $res,
-            'title' => $this->module->l('Salva Movimento', get_class($this)),
-            'message' => $message,
-        ]);
+        Response::json(
+            [
+                'success' => $res,
+                'title' => $this->module->l('Salva Movimento', get_class($this)),
+                'message' => $message,
+            ]
+        );
     }
 
     protected function refreshTableMovements($id_invoice)

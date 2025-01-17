@@ -19,6 +19,7 @@
  */
 
 use MpSoft\MpStock\Helpers\GetProductAttributeCombination;
+use MpSoft\MpStockV2\Helpers\Response;
 
 class AdminMpStockMovementsController extends ModuleAdminController
 {
@@ -123,11 +124,9 @@ class AdminMpStockMovementsController extends ModuleAdminController
                 $data = json_decode($data, true);
                 if (isset($data['action'])) {
                     try {
-                        $this->response($this->{'ajaxProcess' . Tools::ucfirst($data['action'])}());
+                        Response::json($this->{'ajaxProcess' . Tools::ucfirst($data['action'])}());
                     } catch (\Throwable $th) {
-                        $this->response([
-                            'error' => $th->getMessage(),
-                        ]);
+                        Response::json(['error' => $th->getMessage()]);
                     }
                 }
             }
@@ -329,7 +328,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $class = new ImportOrdersDetails();
         $result = $class->getOrdersDetails();
 
-        $this->response($result);
+        Response::json($result);
     }
 
     public function ajaxProcessImportOrdersDetails()
@@ -339,7 +338,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $class = new ImportOrdersDetails();
         $result = $class->importOrdersDetails($data['ordersDetails']);
 
-        $this->response([
+        Response::json([
             'success' => $result['success'],
             'errors' => $result['errors'],
         ]);
@@ -363,7 +362,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
             $row['actions'] = '';
         }
 
-        $this->response(
+        Response::json(
             [
                 'draw' => $draw,
                 'recordsTotal' => $movements['totalRecords'],
@@ -385,7 +384,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
 
         $result = Db::getInstance()->executeS($sql);
 
-        $this->response($result);
+        Response::json($result);
     }
 
     public function ajaxProcessGetProductAttributes()
@@ -393,7 +392,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $id_product = (int) Tools::getValue('productId');
         $combinations = GetProductAttributeCombination::getProductCombinations($id_product);
 
-        $this->response($combinations);
+        Response::json($combinations);
     }
 
     public function ajaxProcessGetCurrentStock()
@@ -403,7 +402,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
 
         $stock = StockAvailable::getQuantityAvailableByProduct($id_product, $id_product_attribute);
 
-        $this->response([
+        Response::json([
             'currentStock' => (int) $stock,
         ]);
     }
@@ -455,7 +454,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
         }
 
         if (!$res) {
-            $this->response([
+            Response::json([
                 'success' => $res,
                 'message' => $message,
             ]);
