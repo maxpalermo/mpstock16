@@ -57,8 +57,6 @@ class AdminMpStockMovementsController extends ModuleAdminController
     {
         parent::setMedia();
 
-        parent::setMedia();
-
         $this->addJqueryUI('ui.datepicker');
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.css');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/datatables/datatables.min.js');
