@@ -99,7 +99,7 @@
 
 <script>
     function calcQuantity() {
-        const sign = $("#movementReason").find("option:selected").data("sign") == 1 ? -1 : 1;
+        const sign = $("#movementReason").find("option:selected").data("sign") == -1 ? -1 : 1;
         const currentStock = parseFloat($("#currentStock").val());
         const movementQuantity = parseFloat($("#movementQuantity").val());
         const finalStock = currentStock + (sign * movementQuantity);

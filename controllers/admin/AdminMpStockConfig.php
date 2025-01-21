@@ -114,7 +114,7 @@ class AdminMpStockConfigController extends ModuleAdminController
         $id_lang = Context::getContext()->language->id;
         $id = (int) Tools::getValue('reason_code');
         $name = Tools::getValue('reason_name');
-        $sign = (int) Tools::getValue('sign');
+        $sign = (int) Tools::getValue('reason_sign');
         $error = null;
 
         $model = new ModelMpStockMvtReasonV2($id, $id_lang);

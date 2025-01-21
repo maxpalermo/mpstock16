@@ -340,4 +340,21 @@ class ModelMpStockDocumentV2 extends ObjectModel
             'rows_affected' => \Db::getInstance()->Affected_Rows(),
         ];
     }
+
+    public static function getByFilename($filename)
+    {
+        $pfx = _DB_PREFIX_;
+        $table = self::$definition['table'];
+        $primary = self::$definition['primary'];
+        $filename = pSQL($filename);
+
+        $sql = "SELECT {$primary} FROM {$pfx}{$table} WHERE number_document = '{$filename}'";
+        $result = (int) Db::getInstance()->getValue($sql);
+
+        if ($result) {
+            return new self($result);
+        }
+
+        return false;
+    }
 }

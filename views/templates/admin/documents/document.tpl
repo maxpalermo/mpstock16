@@ -18,6 +18,7 @@
  *}
 
 {include file="../forms/form-new-movement.tpl"}
+{include file="../forms/form-new-document.tpl"}
 
 <div class="panel">
     <div class="panel-heading">
@@ -62,7 +63,7 @@
     <div class="panel-footer">
         <tr>
             <th colspan="10" class="text-center">
-                <button type="button" class="btn btn-primary" id="btn-add-document">
+                <button type="button" class="btn btn-primary" id="btn-add-document" data-toggle="modal" data-target="#modal-new-document">
                     <i class="icon icon-plus"></i>
                     <span>Aggiungi documento</span>
                 </button>

@@ -97,6 +97,29 @@ class AdminMpStockDocumentsController extends ModuleAdminController
         return parent::initContent();
     }
 
+    public function ajaxProcessSaveDocument()
+    {
+        $id_document = (int) Tools::getValue('id_document');
+        $number_document = Tools::getValue('number_document');
+        $date_document = Tools::getValue('date_document');
+        $id_supplier = (int) Tools::getValue('id_supplier');
+        $id_mpstock_mvt_reason = (int) Tools::getValue('id_mpstock_mvt_reason');
+        $id_employee = (int) Tools::getValue('id_employee');
+
+        $model = new ModelMpStockDocumentV2($id_document);
+        $model->number_document = $number_document;
+        $model->date_document = $date_document;
+        $model->id_supplier = $id_supplier;
+        $model->id_mpstock_mvt_reason = $id_mpstock_mvt_reason;
+        $model->id_employee = $id_employee;
+
+        $result = $model->save();
+
+        Response::json([
+            'success' => (bool) $result,
+        ]);
+    }
+
     public function ajaxProcessGetDocuments()
     {
         $start = (int) Tools::getValue('start');
@@ -239,6 +262,17 @@ class AdminMpStockDocumentsController extends ModuleAdminController
                 ]
             );
         }
+        $mvtReason = new ModelMpStockMvtReasonV2($movementReason, $id_lang);
+        if (!Validate::isLoadedObject($mvtReason)) {
+            Response::json(
+                [
+                    'success' => false,
+                    'title' => $this->module->l('Salva Movimento', get_class($this)),
+                    'message' => $this->module->l('Errore: Tipo di movimento non trovato', get_class($this)),
+                ]
+            );
+        }
+        $sign = (int) $mvtReason->sign;
 
         $id_supplier = (int) $document->id_supplier;
         $document_number = $document->number_document;
@@ -270,6 +304,9 @@ class AdminMpStockDocumentsController extends ModuleAdminController
 
         try {
             $res = $model->add();
+
+            StockAvailable::updateQuantity($productId, $productAttributeId, $quantity * $sign);
+
             $message = $this->l('Movimento salvato correttamente');
         } catch (\Throwable $th) {
             $res = false;

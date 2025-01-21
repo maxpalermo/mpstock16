@@ -107,6 +107,12 @@
 
     function initDataTable() {
         dataTable = $('#table-movements').DataTable({
+            order: [
+                [1, "asc"]
+            ],
+            language: {
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
+            },
             processing: true,
             serverSide: true,
             ajax: {
@@ -314,12 +320,6 @@
                 if (data.status == 0) {
                     $(row).addClass('danger');
                 }
-            },
-            order: [
-                [1, "asc"]
-            ],
-            language: {
-                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
             }
         });
     }

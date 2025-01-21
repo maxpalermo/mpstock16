@@ -97,4 +97,32 @@ class GetProductAttributeCombination
 
         return $result;
     }
+
+    public static function getIdByReference($reference)
+    {
+        if (empty($reference)) {
+            return 0;
+        }
+
+        $query = new \DbQuery();
+        $query->select('pa.id_product_attribute');
+        $query->from('product_attribute', 'pa');
+        $query->where('pa.reference LIKE \'%' . pSQL($reference) . '%\'');
+
+        return (int) \Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
+    }
+
+    public static function getIdByEan13($ean13)
+    {
+        if (empty($ean13)) {
+            return 0;
+        }
+
+        $query = new \DbQuery();
+        $query->select('pa.id_product_attribute');
+        $query->from('product_attribute', 'pa');
+        $query->where('pa.ean13 = \'' . pSQL($ean13) . '\'');
+
+        return (int) \Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
+    }
 }

@@ -27,8 +27,8 @@ class MpStockMvtReason
         $pfx = _DB_PREFIX_ ;
         $sql = "CREATE TABLE IF NOT EXISTS `{$pfx}mpstock_mvt_reason_v2` (
             `id_mpstock_mvt_reason` INT AUTO_INCREMENT PRIMARY KEY,
-            `sign` TINYINT(1) NOT NULL,
-            `deleted` TINYINT(1) NOT NULL,
+            `sign` INT NOT NULL,
+            `active` TINYINT(1) NOT NULL,
             `date_add` DATETIME NOT NULL,
             `date_upd` TIMESTAMP NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";

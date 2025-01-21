@@ -44,167 +44,272 @@
         <span>{l s='Importa documento XML' mod='mpstock'}</span>
     </div>
     <div class="panel-body">
-        .<div class="form-group">
-            <label for="mvtReason">{l s='Tipo movimento' mod='mpstock'}</label>
-            <select name="mvtReason" id="mvtReason" class="form-control chosen">
-                {foreach $mvtReasons as $mvtReason}
-                    <option value="{$mvtReason.id_mpstock_mvt_reason}">{$mvtReason.name}</option>
-                {/foreach}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="document_xml" class="form-control-label">{l s='Seleziona file XML' mod='mpstock'}</label>
-            <input type="file" id="document_xml" name="document_xml" accept=".xml" style="display: none;">
-            <div class="input-group">
-                <span class="input-group-addon">
-                    <i class="icon icon-file"></i>
-                </span>
-                <input type="text" class="form-control bg-light" id="fake-file" readonly>
-                <span class="input-group-addon pointer" onclick="$('#document_xml').trigger('click');">
-                    <span class="item-link" for="document_xml">{l s='Scegli file' mod='mpstock'}</span>
-                </span>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="mvtReason">{l s='Tipo movimento' mod='mpstock'}</label>
+                <select name="mvtReason" id="mvtReason" class="form-control chosen">
+                    {foreach $mvtReasons as $mvtReason}
+                        <option value="{$mvtReason.id_mpstock_mvt_reason}">{$mvtReason.name}</option>
+                    {/foreach}
+                </select>
             </div>
-            <script type="text/javascript">
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.getElementById('document_xml').addEventListener('change', function() {
-                        const file = this.files[0];
-                        if (typeof file === 'undefined') {
-                            document.getElementById('fake-file').value = "";
-                            return;
-                        }
+            <div class="form-wrapper">
+                <div class="form-group">
+                    <label for="document_xml" class="form-control-label">{l s='Seleziona file XML' mod='mpstock'}</label>
+                    <input type="file" id="document_xml" name="document_xml" accept=".xml" style="display: none;">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="icon icon-file"></i>
+                        </span>
+                        <input type="text" class="form-control bg-light" id="fake-file" readonly>
+                        <span class="input-group-addon pointer" onclick="$('#document_xml').trigger('click');">
+                            <span class="item-link" for="document_xml">{l s='Scegli file' mod='mpstock'}</span>
+                        </span>
+                    </div>
+                    <script type="text/javascript">
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.getElementById('document_xml').addEventListener('change', function() {
+                                const file = this.files[0];
+                                if (typeof file === 'undefined') {
+                                    document.getElementById('fake-file').value = "";
+                                    return;
+                                }
 
-                        const fileName = file.name;
+                                const fileName = file.name;
 
-                        document.getElementById('fake-file').value = fileName;
-                    });
-                });
-            </script>
-        </div>
-        <div class="form-group">
-            <div class="drop-zone pointer">
-                <div class="drop-zone-label">
-                    <span class="fa fa-file-import"></span>
-                    <span>{l s='Trascina e rilascia il file qui o clicca per selezionare' mod='mpstock'}</span>
+                                document.getElementById('fake-file').value = fileName;
+                            });
+                        });
+                    </script>
+                </div>
+                <div class="form-group">
+                    <div class="drop-zone pointer">
+                        <div class="drop-zone-label">
+                            <span class="fa fa-file-import"></span>
+                            <span>{l s='Trascina e rilascia il file qui o clicca per selezionare' mod='mpstock'}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="form-group">
-            <button type="button" id="parse_xml" class="btn btn-primary">
-                <span class="fa fa-play"></span>
-                {l s='Processa XML' mod='mpstock'}
-            </button>
-        </div>
-        <div class="form-group" style="display: none;" id="xml_preview">
-            <div class="alert alert-info">
-                <h4 class="alert-heading">{l s='Anteprima' mod='mpstock'}</h4>
-            </div>
+        <div class="form-group" id="xml_preview">
             <div class="d-flex justify-content-center" id="xml_preview_content">
-                <!-- Table content will be inserted here -->
+                <div class="panel" style="width: 100%;">
+                    <div class="panel-heading">
+                        <span class="panel-title">Elenco prodotti da importare</span>
+                    </div>
+                    <div class="panel-body">
+                        <table id="productTable" class="table table-striped table-bordered"></table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
-    function createTableResponse(response) {
-        const dateIta = new Date(response.date[0]).toLocaleString('it-IT');
+    const fetchURL = "{$admin_controller_url}";
+    let dataSource = [];
+    let dataTable = null;
 
-        let summaryHtml = '<div class="document-summary">';
-        summaryHtml += `<p><strong>Documento:</strong> ${ response.document }</p>`;
-        summaryHtml += `<p><strong>Tipo:</strong> ${ response.type }</p>`;
-        summaryHtml += `<p><strong>Data:</strong> ${ dateIta }</p>`;
-        summaryHtml += `<p><strong>Movimento:</strong> ${ response.movement }</p>`;
-        summaryHtml += '</div>';
+    async function createTableResponse(parsedDocument) {
+        const formData = new FormData();
+        formData.append('ajax', 1);
+        formData.append('action', 'renderTableImport');
+        formData.append('document', JSON.stringify(parsedDocument));
 
-        let tableHtml = '<table class="table table-striped table-condensed table-bordered" style="margin: 10px auto; width: auto;">';
-        tableHtml += '<thead><tr>';
-        tableHtml += '<th>EAN13</th><th>Riferimento</th><th>Quantità</th><th>Prezzo</th><th>Prezzo di acquisto</th>';
-        tableHtml += '</tr></thead>';
-        tableHtml += '<tbody>';
-
-        response.content.forEach(item => {
-            let price = item.price;
-            if (price === null || price == 0) {
-                price = '<span class="text-danger">--</span>';
-            } else {
-                price = Number(price).toLocaleString('it-IT', {
-                    maximumFractionDigits: 2,
-                    minimumFractionDigits: 2,
-                    style: 'currency',
-                    currency: 'EUR'
-                });
+        const response = await fetch(
+            "{$admin_controller_url}", 
+            {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
             }
+        );
 
-            let wholesalePrice = item.wholesale_price;
-            if (wholesalePrice === null || wholesalePrice == 0) {
-                wholesalePrice = '<span class="text-danger">--</span>';
-            } else {
-                wholesalePrice = Number(wholesalePrice).toLocaleString('it-IT', {
-                    maximumFractionDigits: 2,
-                    minimumFractionDigits: 2,
-                    style: 'currency',
-                    currency: 'EUR'
-                });
-            }
+        data = await response.json();
 
-            let qty = item.qty;
-            if (qty === null || qty <= 0) {
-                qty = '<span class="text-danger">--</span>';
-            } else {
-                qty = Number(qty).toLocaleString('it-IT', {
-                    maximumFractionDigits: 0,
-                    minimumFractionDigits: 0
-                });
-            }
+        if (data.success) {
+            const previewDiv = document.getElementById('xml_preview');
+            previewDiv.innerHTML = data.html;
+            $(previewDiv).show();
+        }
 
-            tableHtml += '<tr>';
-            tableHtml += `<td>${ item.ean13 }</td>`;
-            tableHtml += `<td>${ item.reference }</td>`;
-            tableHtml += `<td class="text-right">${ qty }</td>`;
-            tableHtml += `<td class="text-right">${ price }</td>`;
-            tableHtml += `<td class="text-right">${ wholesalePrice }</td>`;
-            tableHtml += '</tr>';
-        });
-
-        tableHtml += '</tbody></table>';
-
-        $('#xml_preview_content').html(summaryHtml + tableHtml);
-        $('#xml_preview').show();
+        return data;
     }
 
-    $(document).ready(function() {
+    async function processFile(file) {
+        dataSource = [];
+        $(dataTable).DataTable().clear();
+
+        if (typeof file === 'undefined') {
+            $("#fake-file").val("");
+            return false;
+        }
+
+        var formData = new FormData();
+        formData.append('document_xml', file);
+        formData.append('ajax', true);
+        formData.append('action', 'parseFile');
+
+        const response = await fetch(
+            "{$admin_controller_url}", 
+            {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+        console.log("DATA", data);
+
+        if (data.success) {
+            dataSource = data.rows;
+
+            dataTable.clear();
+            dataTable.rows.add(dataSource)
+            dataTable.draw();
+        }
+    }
+
+    async function importData(dataRows) {
+        let data = {
+            filename: $('#document_xml').val(),
+            mvtReasonId: $('#mvtReason').val(),
+            rows: dataRows,
+            ajax: 1,
+            action: 'importData'
+        };
+
+        const response = await fetch(fetchURL, {
+            headers: {
+                'credentials': 'same-origin',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        const dataJson = await response.json();
+
+        console.log(dataJson);
+
+        if (dataJson.success) {
+            $.growl.notice({
+                'title': 'Importazione',
+                'message': dataJson.message
+            })
+        } else {
+            $.growl.error({
+                'title': 'Importazione',
+                'message': dataJson.message
+            })
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        dataTable = $('#productTable').DataTable({
+            layout: {
+                topStart: {
+                    buttons: [{
+                        text: 'Importa',
+                        className: 'btn btn-primary',
+                        action: function(e, dt, button, config) {
+                            let dtData = dt.rows().data();
+                            let rowsData = [];
+                            $.each(dtData, function() {
+                                if (this.checkbox == 1) {
+                                    rowsData.push(this);
+                                }
+                            })
+                            importData(rowsData);
+                        }
+                    }]
+                }
+            },
+            order: [
+                [1, "asc"]
+            ],
+            language: {
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
+            },
+            data: dataSource,
+            columns: [{
+                    title: '<input type="checkbox" id="check-all-movements">',
+                    name: 'checkbox',
+                    data: 'checkbox',
+                    defaultContent: false,
+                    render: function(data, type, row) {
+                        if (data == 1) {
+                            return '<input type="checkbox" class="row-checkbox" checked>';
+                        }
+                        return '<input type="checkbox" class="row-checkbox">';
+                    }
+                },
+                { title: 'EAN13', data: 'ean13', defaultContent: '--' },
+                { title: 'Reference', data: 'reference', defaultContent: '--' },
+                { title: 'Prodotto', data: 'product_name', defaultContent: '--' },
+                { title: 'Combinazione', data: 'combination', defaultContent: '--' },
+                { title: 'Quantità', data: 'qty', defaultContent: '0' },
+                {
+                    title: 'Prezzo',
+                    data: 'price',
+                    defaultContent: '0',
+                    render: function(data, type, row) {
+                        return Number(data).toLocaleString("it-IT", {
+                            maximumFractionDigits: 2,
+                            minimumFractionDigits: 2,
+                            style: 'currency',
+                            currency: 'EUR'
+                        });
+                    }
+                },
+                {
+                    title: 'Prezzo acq',
+                    data: 'wholesale_price',
+                    defaultContent: '0',
+                    render: function(data, type, row) {
+                        return Number(data).toLocaleString("it-IT", {
+                            maximumFractionDigits: 2,
+                            minimumFractionDigits: 2,
+                            style: 'currency',
+                            currency: 'EUR'
+                        });
+                    }
+                },
+                {
+                    title: 'Esiste',
+                    data: 'exists',
+                    defaultContent: false,
+                    render: function(data, type, row) {
+                        if (data == 1) {
+                            return '<span class="text-success">Si</span>';
+                        } else {
+                            return '<span class="text-danger">No</span>';
+                        }
+                    }
+                },
+            ],
+            initComplete: function(e) {
+                document.getElementById('check-all-movements').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    console.log("CHECKED", this.checked);
+                    $(".row-checkbox").prop('checked', this.checked);
+                });
+            }
+        });
+
         $('#document_xml').on('change', function(event) {
             event.preventDefault();
             var file = event.target.files[0];
 
-            $("#xml_preview").hide();
-            $("#xml_preview_content").html("");
-
-            if (typeof file === 'undefined') {
-                $("#fake-file").val("");
-                return false;
-            }
-
-            var formData = new FormData();
-            formData.append('document_xml', file);
-            formData.append('ajax', true);
-            formData.append('action', 'loadFile');
-
-            $.ajax({
-                url: "{$admin_controller_url}",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success === false) {
-                        alert(response.message);
-                        return false;
-                    }
-
-                    createTableResponse(response);
-                }
-            });
+            processFile(file);
 
             return false;
         });
