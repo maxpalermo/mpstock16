@@ -18,8 +18,8 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
 
-use MpSoft\MpStock\Helpers\GetProductAttributeCombination;
-use MpSoft\MpStock\Helpers\GetProductImage;
+use MpSoft\MpStockV2\Helpers\GetProductAttributeCombination;
+use MpSoft\MpStockV2\Helpers\GetProductImage;
 use MpSoft\MpStockV2\Helpers\Response;
 
 class AdminMpStockQuickMovementController extends ModuleAdminController
@@ -57,6 +57,8 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/swal2/swal2.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/htmx/htmx.js');
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
         $this->addJqueryPlugin('autocomplete');
         $this->addJqueryUI('ui.autocomplete');
@@ -124,9 +126,23 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
     public function ajaxProcessAddQuickMovement()
     {
         $id_lang = (int) Context::getContext()->language->id;
-        $product = Tools::getValue('product');
-        $commons = ModelMpStockMovementV2::getCommons((int) $product['id_product_attribute']);
-        $mvtReasonId = (int) Configuration::get('MPSTOCK_QUICK_MOVEMENT');
+        $movement = Tools::getValue('movement');
+        $commons = ModelMpStockMovementV2::getCommons((int) $movement['id_product_attribute']);
+        $sign = (int) $movement['sign'];
+
+        if ($sign == 0) {
+            Response::json([
+                'success' => false,
+                'message' => Tools::displayError('Tipo di movimento non valido.'),
+            ]);
+        }
+
+        if ($sign == 1) {
+            $mvtReasonId = MpStockV2::getLoadMvtId();
+        } else {
+            $mvtReasonId = MpStockV2::getUnloadMvtId();
+        }
+
         $mvtReason = new ModelMpStockMvtReasonV2($mvtReasonId, $id_lang);
 
         if (!Validate::isLoadedObject($mvtReason)) {
@@ -137,10 +153,10 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
         }
 
         $model = new ModelMpStockMovementV2();
-        $productId = (int) $product['id_product'];
-        $productAttributeId = (int) $product['id_product_attribute'];
+        $productId = (int) $movement['id_product'];
+        $productAttributeId = (int) $movement['id_product_attribute'];
         $stockBefore = StockAvailable::getQuantityAvailableByProduct($productId, $productAttributeId);
-        $stockMvt = $product['quantity'] * $product['sign'];
+        $stockMvt = (int) $movement['quantity'] * $sign;
         $stockAfter = $stockBefore + $stockMvt;
 
         $data = [
@@ -148,11 +164,11 @@ class AdminMpStockQuickMovementController extends ModuleAdminController
             'ref_movement' => $mvtReason->name,
             'id_warehouse' => 0,
             'id_supplier' => $commons['id_supplier'],
-            'documment_number' => 'MOVIMENTO-VELOCE',
+            'document_number' => 'MOVIMENTO-VELOCE',
             'document_date' => date('Y-m-d H:i:s'),
             'id_mpstock_mvt_reason' => $mvtReasonId,
-            'id_product' => $product['id_product'],
-            'id_product_attribute' => $product['id_product_attribute'],
+            'id_product' => $movement['id_product'],
+            'id_product_attribute' => $movement['id_product_attribute'],
             'reference' => $commons['reference'],
             'ean13' => $commons['ean13'],
             'upc' => $commons['upc'],

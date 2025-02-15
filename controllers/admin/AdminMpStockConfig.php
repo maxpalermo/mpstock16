@@ -55,6 +55,8 @@ class AdminMpStockConfigController extends ModuleAdminController
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/swal2/swal2.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/htmx/htmx.js');
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
         $this->addJqueryPlugin('autocomplete');
         $this->addJqueryUI('ui.autocomplete');
@@ -126,7 +128,8 @@ class AdminMpStockConfigController extends ModuleAdminController
             if (Validate::isLoadedObject($model)) {
                 $result = $model->update();
             } else {
-                $model->force_id = $id;
+                $model->force_id = true;
+                $model->id = $id;
                 $result = $model->add();
             }
         } catch (\Throwable $th) {

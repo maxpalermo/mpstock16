@@ -1,0 +1,14 @@
+.btn-small {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.btn-small i.material-icons {
+    font-size: 0.75rem !important;
+}
+
+.btn-small span {
+    margin-left: 5px !important;
+    font-size: 0.75rem !important;
+}

@@ -1,68 +1,33 @@
-{*
- * Copyright since 2007 PrestaShop SA and Contributors
- * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Academic Free License version 3.0
- * that is bundled with this package in the file LICENSE.md.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/AFL-3.0
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
- *
- * @author    Massimiliano Palermo <maxx.palermo@gmail.com>
- * @copyright Since 2016 Massimiliano Palermo
- * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
- *}
-
-{include file="../forms/form-new-movement.tpl"}
-
 <div class="panel">
     <div class="panel-heading">
-        <i class="icon icon-cogs"></i>
-        <span>Elenco movimenti</span>
+        <i class="material-icons">description</i>
+        <span>Elenco documenti</span>
     </div>
     <div class="panel-body">
-        <table class="table table-striped table-bordered table-hover" id="table-movements">
+        <table class="table table-striped table-bordered table-hover" id="table-documents">
             <thead>
                 <tr>
                     <th>
-                        <input type="checkbox" id="check-all-movements" />
+                        <input type="checkbox" id="check-all-documents" />
                     </th>
                     <th>Id</th>
                     <th>Numero</th>
                     <th>Data</th>
                     <th>Movimento</th>
                     <th>Fornitore</th>
-                    <th>Prodotto</th>
-                    <th>Riferimento</th>
-                    <th>Combinazione</th>
-                    <th>Ean13</th>
-                    <th>Prezzo</th>
-                    <th>Stock iniziale</th>
-                    <th>Movimento</th>
-                    <th>Stock finale</th>
+                    <th>Totale</th>
                     <th>Operatore</th>
                     <th>Data inserimento</th>
                     <th>Azioni</th>
                 </tr>
                 <tr>
                     <th data-field=""></th>
-                    <th data-field="id_mpstock_movement"></th>
-                    <th data-field="document_number"></th>
-                    <th data-field="document_date"></th>
+                    <th data-field="id_mpstock_document"></th>
+                    <th data-field="number_document"></th>
+                    <th data-field="date_document"></th>
                     <th data-field="mvt_reason"></th>
                     <th data-field="supplier"></th>
-                    <th data-field="product_name"></th>
-                    <th data-field="reference"></th>
-                    <th data-field="product_combination"></th>
-                    <th data-field="ean13"></th>
-                    <th data-field="price_te"></th>
-                    <th data-field="stock_quantity_before"></th>
-                    <th data-field="stock_movement"></th>
-                    <th data-field="stock_quantity_after"></th>
+                    <th data-field="tot_document_ti"></th>
                     <th data-field="employee"></th>
                     <th data-field="date_add"></th>
                     <th data-field=""></th>
@@ -76,9 +41,9 @@
     <div class="panel-footer">
         <tr>
             <th colspan="10" class="text-center">
-                <button type="button" class="btn btn-primary" id="btn-add-movement" data-toggle="modal" data-target="#newMovementModal">
-                    <i class="icon icon-plus"></i>
-                    <span>Aggiungi movimento</span>
+                <button type="button" class="btn btn-primary" id="btn-add-document">
+                    <i class="material-icons">add</i>
+                    <span>Aggiungi documento</span>
                 </button>
             </th>
         </tr>
@@ -88,31 +53,8 @@
 <script type="text/javascript">
     let dataTable = null;
 
-    function setBgColor(data, type, row) {
-        let bg = 'info';
-        let value = Number(data).toLocaleString("it-IT", {
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0
-        });
-
-        if (Number(data) < 0) {
-            bg = 'danger';
-        } else if (Number(data) == 0) {
-            bg = 'warning';
-        } else {
-            bg = 'info';
-        }
-        return `<span class="pull-right text-${ bg }">${ value }</span>`;
-    }
-
     function initDataTable() {
-        dataTable = $('#table-movements').DataTable({
-            order: [
-                [1, "asc"]
-            ],
-            language: {
-                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
-            },
+        dataTable = $('#table-documents').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -120,7 +62,7 @@
                 type: "POST",
                 data: {
                     ajax: true,
-                    action: "get_movements"
+                    action: "get_documents"
                 }
             },
             columns: [{
@@ -132,57 +74,37 @@
                         let node = document.createElement('div');
                         $(node)
                             .addClass('d-flex justify-content-between')
-                            .append('<input type="checkbox" name="id_mpstock_movement[]" value="' + row.id_mpstock_movement + '" />')
+                            .append($("<button>").addClass('btn btn-link toggleInvoiceDetail').attr('data-id_invoice', row.id_mpstock_document).append('<i class="fa fa-chevron-up"></i>'))
+                            .append('<input type="checkbox" name="id_mpstock_document[]" value="' + row.id_mpstock_document + '" />')
                         return node;
                     },
                 },
                 {
-                    data: "id_mpstock_movement",
+                    data: "id_mpstock_document",
                     render: function(data, type, row) {
-                        return '<a href="{$base_url}admin/mpstockv2/movements/edit/' + data + '">' + data + '</a>';
+                        return '<a href="{$base_url}admin/mpstockv2/documents/edit/' + data + '">' + data + '</a>';
                     },
-                    name: "a.id_mpstock_movement"
+                    name: "a.id_mpstock_document"
                 },
                 {
-                    data: "document_number",
-                    name: "a.document_number"
+                    data: "number_document",
+                    name: "a.number_document",
                 },
                 {
-                    data: "document_date",
-                    name: "a.document_date",
-                    render: function(data, type, row) {
-                        return moment(data).format('DD/MM/YYYY');
-                    },
+                    data: "date_document",
+                    name: "a.date_document"
                 },
                 {
                     data: "mvt_reason",
-                    name: "mvt.name"
+                    name: "m.name",
                 },
                 {
                     data: "supplier",
                     name: "s.name"
                 },
                 {
-                    data: "product_name",
-                    name: "pl.name",
-                },
-                {
-                    data: "reference",
-                    name: "a.reference",
-                },
-                {
-                    data: "product_combination",
-                    name: "",
-                    searchable: false,
-                    orderable: false,
-                },
-                {
-                    data: "ean13",
-                    name: "a.ean13"
-                },
-                {
-                    data: "price_te",
-                    name: "a.price_te",
+                    data: "tot_document_ti",
+                    name: "a.tot_document_ti",
                     render: function(data, type, row) {
                         let bg = 'info';
                         let value = Number(data).toLocaleString("it-IT", {
@@ -195,30 +117,9 @@
                         } else if (Number(data) == 0) {
                             bg = 'warning';
                         } else {
-                            bg = 'info';
+                            bg = 'success';
                         }
                         return `<span class="pull-right text-${ bg }">${ value } EUR</span>`;
-                    },
-                },
-                {
-                    data: "stock_quantity_before",
-                    name: "a.stock_quantity_before",
-                    render: function(data, type, row) {
-                        return setBgColor(data, type, row);
-                    },
-                },
-                {
-                    data: "stock_movement",
-                    name: "a.stock_movement",
-                    render: function(data, type, row) {
-                        return setBgColor(data, type, row);
-                    },
-                },
-                {
-                    data: "stock_quantity_after",
-                    name: "a.stock_quantity_after",
-                    render: function(data, type, row) {
-                        return setBgColor(data, type, row);
                     },
                 },
                 {
@@ -236,9 +137,9 @@
                 }
             ],
             initComplete: function() {
-                $('#check-all-movements').on('change', function() {
+                $('#check-all-documents').on('change', function() {
                     let checked = $(this).prop('checked');
-                    $('#table-movements tbody input[type="checkbox"]').prop('checked', checked);
+                    $('#table-documents tbody input[type="checkbox"]').prop('checked', checked);
                 });
                 this.api()
                     .columns()
@@ -250,13 +151,11 @@
 
                         if (data_field) {
                             switch (data_field) {
-                                case "id_mpstock_movement":
-                                case "document_number":
+                                case "id_mpstock_document":
+                                case "number_document":
                                 case "mvt_reason":
                                 case "supplier":
-                                case "product_name":
-                                case "reference":
-                                case "ean13":
+                                case "tot_document_ti":
                                 case "employee":
                                     let input = document.createElement('input');
                                     $(input).addClass('form-control');
@@ -283,7 +182,7 @@
                                         }
                                     });
                                     break;
-                                case "document_date":
+                                case "date_document":
                                 case "date_add":
                                     let datepicker = document.createElement('input');
                                     $(datepicker).attr('type', 'date').addClass('form-control');
@@ -314,12 +213,18 @@
                     });
             },
             callback: function() {
-                $('#check-all-movements').prop('checked', false);
+                $('#check-all-documents').prop('checked', false);
             },
             rowCallback: function(row, data) {
                 if (data.status == 0) {
                     $(row).addClass('danger');
                 }
+            },
+            order: [
+                [1, "desc"]
+            ],
+            language: {
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/lang/it_IT.json"
             }
         });
     }

@@ -1,0 +1,69 @@
+[class^="process-icon-"] {
+    display: block;
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+    font-size: 28px;
+    background: transparent;
+    background-size: 26px;
+    background-position: center;
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: inherit;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.process-icon-database:before {
+    content: var(--fa-database);
+}
+
+.process-icon-excel:before {
+    content: var(--fa-file-excel-o);
+}
+
+.process-icon-word:before {
+    content: var(--fa-file-word-o);
+}
+
+.process-icon-pdf:before {
+    content: var(--fa-file-pdf-o);
+}
+
+.process-icon-ppt:before {
+    content: var(--fa-file-powerpoint-o);
+}
+
+.process-icon-image:before {
+    content: var(--fa-file-image-o);
+}
+
+.process-icon-audio:before {
+    content: var(--fa-file-audio-o);
+}
+
+.process-icon-question:before {
+    content: var(--fa-question-circle);
+}
+
+.process-icon-verify:before {
+    content: var(--fa-check-circle);
+}
+
+.process-icon-check:before {
+    content: var(--fa-check);
+}
+
+.process-icon-compare:before {
+    content: var(--fa-arrows-h);
+}
+
+.process-icon-align:before {
+    content: var(--fa-bar-chart);
+}
+
+.process-icon-error:before {
+    content: var(--fa-exclamation-circle);
+}

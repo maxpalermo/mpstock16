@@ -28,7 +28,7 @@
     </thead>
     <tbody>
         {foreach from=$combinations item=combination}
-            <tr>
+            <tr {if $combination.default_on} class="default_on" title="Combinazione di default" {/if}>
                 <td>{$combination.combination|escape}</td>
                 <td style="width: 32em; text-align: left;">
                     {if !$combination.reference}

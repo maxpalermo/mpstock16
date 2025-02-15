@@ -41,9 +41,30 @@ class AdminMpStockAvailabilityController extends ModuleAdminController
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/swal2/swal2.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/htmx/htmx.js');
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
         $this->addJqueryPlugin('autocomplete');
         $this->addJqueryUI('ui.autocomplete');
+    }
+
+    public function initPageHeaderToolbar()
+    {
+        $this->page_header_toolbar = true;
+
+        $this->page_header_toolbar_btn['default_qty'] = [
+            'href' => $this->context->link->getAdminLink('AdminMpStockAvailability') . '&action=update_default_qty',
+            'desc' => $this->module->l('Aggiorna quantità di default', $this->controller_name),
+            'icon' => 'process-icon-refresh',
+        ];
+
+        $this->page_header_toolbar_btn['align_quantities'] = [
+            'href' => $this->context->link->getAdminLink('AdminMpStockAvailability') . '&action=align_quantities',
+            'desc' => $this->module->l('Allinea quantità di magazzino', $this->controller_name),
+            'icon' => 'process-icon-align',
+        ];
+
+        parent::initPageHeaderToolbar();
     }
 
     public function initContent()
@@ -63,6 +84,26 @@ class AdminMpStockAvailabilityController extends ModuleAdminController
         $this->content = $page;
 
         return parent::initContent();
+    }
+
+    public function initProcess()
+    {
+        parent::initProcess();
+        if (Tools::getValue('update_default_on')) {
+            $this->action = 'update_default_on';
+        }
+        if (Tools::getValue('check_default_on')) {
+            $this->action = 'check_default_on';
+        }
+        if (Tools::getValue('action') === 'checkWrongDefault') {
+            $this->action = 'checkWrongDefault';
+        }
+        if (Tools::getValue('action') === 'checkShouldBeDefault') {
+            $this->action = 'checkShouldBeDefault';
+        }
+        if (Tools::getValue('action') === 'checkComparison') {
+            $this->action = 'checkComparison';
+        }
     }
 
     public function ajaxProcessGetTable()
@@ -226,6 +267,7 @@ class AdminMpStockAvailabilityController extends ModuleAdminController
             ->select('COALESCE(pa.ean13, p.ean13) as ean13')
             ->select('a.quantity')
             ->select("GROUP_CONCAT(attr.name SEPARATOR ' - ') as combination")
+            ->select('pa.default_on')
             ->from('stock_available', 'a')
             ->innerJoin('product', 'p', 'a.id_product = p.id_product')
             ->innerJoin('product_attribute', 'pa', 'a.id_product_attribute = pa.id_product_attribute')
@@ -255,5 +297,81 @@ class AdminMpStockAvailabilityController extends ModuleAdminController
                 'table' => $table,
             ]
         );
+    }
+
+    public function processUpdateDefaultQty()
+    {
+        $table = _DB_PREFIX_ . 'product_attribute';
+        $db = Db::getInstance();
+        // Azzero tutti i default_on
+        $db->execute(
+            "UPDATE $table SET default_on = NULL"
+        );
+        // Cerco la quantità maggiore per ogni prodotto
+        $sql = new DbQuery();
+        $sql->select('id_product, MAX(quantity) as max_quantity')
+            ->from('product_attribute')
+            ->groupBy('id_product');
+
+        $sql = $sql->build();
+        $results = $db->executeS($sql);
+
+        $rows_updated = 0;
+
+        foreach ($results as $result) {
+            $sql = "UPDATE $table SET default_on=1 WHERE id_product={$result['id_product']} AND quantity = {$result['max_quantity']} LIMIT 1";
+            $db->execute($sql);
+
+            $sql_pa = "SELECT id_product_attribute FROM $table WHERE id_product={$result['id_product']} AND default_on = 1";
+            $row_pa = (int) $db->getValue($sql_pa);
+
+            $sql = "UPDATE {$table}_shop SET default_on=NULL WHERE id_product = {$result['id_product']}";
+            DB::getInstance()->execute($sql);
+
+            $sql = "UPDATE {$table}_shop SET default_on=1 WHERE id_product_attribute = {$row_pa}";
+            DB::getInstance()->execute($sql);
+
+            $affected_rows = $db->Affected_Rows();
+            $rows_updated += $affected_rows;
+        }
+
+        if ($rows_updated) {
+            $this->warnings[] = sprintf(
+                $this->l('Aggiornate %d combinazioni di default', $this->controller_name),
+                $rows_updated
+            );
+        } else {
+            $this->confirmations[] = $this->l('Tutte le combinazioni sono corrette');
+        }
+    }
+
+    public function processAlignQuantities()
+    {
+        $sql = 'UPDATE ps_product_attribute pa
+        INNER JOIN ps_stock_available sa ON pa.id_product_attribute = sa.id_product_attribute
+        SET pa.quantity = sa.quantity
+        WHERE pa.quantity != sa.quantity';
+
+        try {
+            if (Db::getInstance()->execute($sql)) {
+                $sql = str_replace('ps_product_attribute', 'ps_attribute_shop', $sql);
+                Db::getInstance()->execute($sql);
+
+                $affected = Db::getInstance()->Affected_Rows();
+                if ($affected > 0) {
+                    $this->confirmations[] = sprintf(
+                        $this->module->l('Quantità allineate correttamente per %d combinazioni', $this->controller_name),
+                        $affected
+                    );
+                } else {
+                    $this->confirmations[] = $this->module->l('Tutte le quantità sono già allineate', $this->controller_name);
+                }
+            } else {
+                $this->errors[] = $this->module->l('Si è verificato un errore durante l\'allineamento delle quantità', $this->controller_name);
+            }
+        } catch (Exception $e) {
+            $this->errors[] = $this->module->l('Si è verificato un errore durante l\'allineamento delle quantità', $this->controller_name);
+            error_log($e->getMessage());
+        }
     }
 }

@@ -57,11 +57,20 @@
         <div class="row mt-4">
             <div class="col-lg-12">
                 <div class="form-group pull-left mr-2">
-                    <label for="mvtReason">{l s='Causale di default per l\'importazione' mod='mpstockv2'}</label>
+                    <label for="mvtReason">{l s='Causale di default per il carico' mod='mpstockv2'}</label>
                     <br>
-                    <select class="form-control chosen" id="mvtReason" name="mvtReason">
+                    <select class="form-control chosen" id="mvtLoadReasonId" name="mvtReason">
                         {foreach from=$mvtReasons item=mvtReason}
-                            <option value={$mvtReason.id_mpstock_mvt_reason} {if $mvtReason.id_mpstock_mvt_reason == $mvtReasonId}selected{/if}>{$mvtReason.name}</option>
+                            <option value={$mvtReason.id_mpstock_mvt_reason} {if $mvtReason.id_mpstock_mvt_reason == $mvtLoadReasonId}selected{/if}>{$mvtReason.name}</option>
+                        {/foreach}
+                    </select>
+                </div>
+                <div class="form-group pull-left mr-2">
+                    <label for="mvtReason">{l s='Causale di default per lo scarico' mod='mpstockv2'}</label>
+                    <br>
+                    <select class="form-control chosen" id="mvtUnloadReasonId" name="mvtReason">
+                        {foreach from=$mvtReasons item=mvtReason}
+                            <option value={$mvtReason.id_mpstock_mvt_reason} {if $mvtReason.id_mpstock_mvt_reason == $mvtUnloadReasonId}selected{/if}>{$mvtReason.name}</option>
                         {/foreach}
                     </select>
                 </div>
@@ -73,7 +82,7 @@
                     </button>
                 </div>
             </div>
-            <p>{l s='Seleziona la causale di default per configurare le impostazioni di importazione.' mod='mpstockv2'}</p>
+            <hr>
         </div>
 
 
@@ -134,17 +143,16 @@
 </div>
 
 <script type="text/javascript">
-    function displayMessage(classType, message, rowsAffected, errors) {
-        $(".ajax-message .alert").removeClass().addClass("alert").addClass(classType);
-        $(".ajax-message .alert").html(
-            message +
-            "<br>" +
-            "Righe aggiornate: " + rowsAffected +
-            "<br>" +
-            (errors ? "Errori: " + errors : "")
-        );
-        $(".ajax-message").show();
-    }
+    {literal}
+        function displayMessage(classType, message, rowsAffected, errors) {
+            Swal.fire({
+                title: 'Operazione eseguita',
+                html: `${message}<br>Righe aggiornate: ${rowsAffected}<br>${errors ? "Errori: " + errors : ""}`,
+                icon: classType.replace("alert-", ""),
+                confirmButtonText: "Ok",
+            });
+        }
+    {/literal}
 
     document.addEventListener('DOMContentLoaded', function(e) {
         $("#btnSaveMvtReason").on('click', function(e) {
@@ -152,35 +160,44 @@
             e.stopPropagation();
             e.stopImmediatePropagation();
 
-            if (!confirm("Procedere con l'operazione?")) {
-                return false;
-            }
+            Swal.fire({
+                title: 'Attenzione',
+                text: "Sei sicuro di voler salvare le modifiche?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Si',
+                cancelButtonText: 'Annulla'
+            }).then((result) => {
+                if (result.value) {
+                    let mvtLoadReasonId = $("#mvtLoadReasonId").val();
+                    let mvtUnloadReasonId = $("#mvtUnloadReasonId").val();
 
-            var mvtReason = $("#mvtReason").val();
-
-            $.ajax({
-                url: "{$link->getModuleLink('mpstockv2', 'ajax')}",
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    ajax: 1,
-                    action: 'saveMvtReason',
-                    mvtReasonId: mvtReason
-                },
-                success: function(response) {
-                    if (response.success) {
-                        displayMessage("alert-success", response.message, response.rows_affected, "");
-                    } else {
-                        let errors = response.errors.join("\n");
-                        displayMessage("alert-danger", response.message, response.rows_affected, errors);
-                    }
-                },
-                error: function() {
-                    displayMessage("alert-danger", '{l s='Si è verificato un errore durante la richiesta.' mod='mpstockv2'}', "", "");
+                    $.ajax({
+                        url: "{$link->getModuleLink('mpstockv2', 'ajax')}",
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            ajax: 1,
+                            action: 'SaveDefaultMvtReasonsId',
+                            mvtLoadReasonId: mvtLoadReasonId,
+                            mvtUnloadReasonId: mvtUnloadReasonId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                displayMessage("alert-success", response.message, response.rows_affected, "");
+                            } else {
+                                let errors = response.errors.join("\n");
+                                displayMessage("alert-danger", response.message, response.rows_affected, errors);
+                            }
+                        },
+                        error: function() {
+                            displayMessage("alert-danger", '{l s='Si è verificato un errore durante la richiesta.' mod='mpstockv2'}', "", "");
+                        }
+                    });
                 }
             });
-
-            return false;
         });
 
         $('.btn-action').on('click', function(e) {
@@ -188,26 +205,35 @@
             e.stopPropagation();
             e.stopImmediatePropagation();
 
-            if (!confirm("Procedere con l'operazione?")) {
-                return false;
-            }
+            Swal.fire({
+                title: 'Attenzione',
+                text: "Procedere con l'operazione?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Si',
+                cancelButtonText: 'Annulla'
+            }).then((result) => {
+                if (result.value) {
+                    var url = $(this).attr('href');
 
-            var url = $(this).attr('href');
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        displayMessage("alert-success", response.message, response.rows_affected, "");
-                    } else {
-                        let errors = response.errors.join("\n");
-                        displayMessage("alert-danger", response.message, response.rows_affected, errors);
-                    }
-                },
-                error: function() {
-                    showErrorMessage('{l s='Si è verificato un errore durante la richiesta.' mod='mpstockv2'}');
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                displayMessage("alert-success", response.message, response.rows_affected, "");
+                            } else {
+                                let errors = response.errors.join("\n");
+                                displayMessage("alert-danger", response.message, response.rows_affected, errors);
+                            }
+                        },
+                        error: function() {
+                            showErrorMessage('{l s='Si è verificato un errore durante la richiesta.' mod='mpstockv2'}');
+                        }
+                    });
                 }
             });
 

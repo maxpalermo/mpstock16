@@ -257,4 +257,15 @@ class ModelMpStockMvtReasonV2 extends ObjectModel
 
         return $errors;
     }
+
+    public static function getSign($id_mvt)
+    {
+        $db = Db::getInstance();
+        $sql = new DbQuery();
+        $sql->select('sign')
+            ->from('mpstock_mvt_reason')
+            ->where('id_mpstock_mvt_reason=' . (int) $id_mvt);
+
+        return (int) $db->getValue($sql);
+    }
 }

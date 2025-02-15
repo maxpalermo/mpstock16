@@ -35,6 +35,11 @@
         cursor: pointer;
         background-color: #f5f5f5;
     }
+
+    .default_on td {
+        background-color: #72C279 !important;
+        color: #fcfcfc !important;
+    }
 </style>
 
 <div class="panel">
@@ -120,7 +125,7 @@
                     [1, "asc"]
                 ],
                 language: {
-                    "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
+                    "url": "/modules/mpstockv2/views/js/plugins/datatables/lang/it_IT.json"
                 },
                 paging: true,
                 searching: true,

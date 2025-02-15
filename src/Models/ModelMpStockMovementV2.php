@@ -170,13 +170,11 @@ class ModelMpStockMovementV2 extends ObjectModel
             ->select('SQL_CALC_FOUND_ROWS a.*')
             ->select('o.reference as order_reference')
             ->select('pl.name as product_name')
-            ->select('m.name as mvt_reason')
             ->select('CONCAT(e.firstname, " ", e.lastname) as employee')
             ->select('s.name as supplier, 0 as checkbox')
             ->from($table, 'a')
             ->leftJoin('orders', 'o', 'a.id_order = o.id_order')
             ->leftJoin('product_lang', 'pl', 'a.id_product = pl.id_product and pl.id_lang = ' . (int) $id_lang)
-            ->leftJoin('mpstock_mvt_reason_lang', 'm', 'a.id_mpstock_mvt_reason = m.id_mpstock_mvt_reason and m.id_lang = ' . (int) $id_lang)
             ->leftJoin('employee', 'e', 'a.id_employee = e.id_employee')
             ->leftJoin('supplier', 's', 'a.id_supplier = s.id_supplier');
 
@@ -366,7 +364,7 @@ class ModelMpStockMovementV2 extends ObjectModel
             $errors = array_merge($errors, $query_result['errors']);
         }
 
-        $id_mvt = (int) Configuration::get('MPSTOCKV2_MVT_REASON_ID');
+        $id_mvt = (int) Configuration::get(MpStockV2::MPSTOCK_DEFAULT_UNLOAD_MVT_ID);
         $name_mvt = '';
         $mvt = new ModelMpStockMvtReasonV2($id_mvt, $id_lang);
         if (Validate::isLoadedObject($mvt)) {
@@ -499,7 +497,7 @@ class ModelMpStockMovementV2 extends ObjectModel
 
     public function hydrateFromOrderDetail($orderDetail, $refund = false)
     {
-        $mvtId = (int) Configuration::get(\MpStockV2::MPSTOCKV2_MVT_REASON_ID);
+        $mvtId = (int) Configuration::get(\MpStockV2::MPSTOCK_DEFAULT_UNLOAD_MVT_ID);
         $mvt = new ModelMpStockMvtReasonV2($mvtId, (int) Context::getContext()->language->id);
         if (Validate::isLoadedObject($mvt)) {
             $this->id_mpstock_mvt_reason = $mvt->id;

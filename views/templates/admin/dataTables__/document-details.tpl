@@ -189,7 +189,7 @@
                 [1, "asc"]
             ],
             language: {
-                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/lang/it_IT.json"
             }
         });
     }

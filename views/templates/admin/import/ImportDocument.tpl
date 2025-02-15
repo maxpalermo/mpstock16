@@ -96,7 +96,18 @@
             <div class="d-flex justify-content-center" id="xml_preview_content">
                 <div class="panel" style="width: 100%;">
                     <div class="panel-heading">
-                        <span class="panel-title">Elenco prodotti da importare</span>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <span class="panel-title">Elenco prodotti da importare:</span>
+                                <span id="tot-rows-list" class="ml-3 text-info text-bold">0</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary btn-import">
+                                    <i class="icon icon-download"></i>
+                                    <span>Importa</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="panel-body">
                         <table id="productTable" class="table table-striped table-bordered"></table>
@@ -169,7 +180,15 @@
         console.log("DATA", data);
 
         if (data.success) {
+            console.log("response data:", data);
+
+            $('#mvtReason').val(data.mvtReasonId).trigger('chosen:updated');
             dataSource = data.rows;
+            {literal}
+                console.log("Totale righe: ", data.rows.length);
+
+                $("#tot-rows-list").html(`${data.rows.length} prodotti`)
+            {/literal}
 
             dataTable.clear();
             dataTable.rows.add(dataSource)
@@ -178,8 +197,10 @@
     }
 
     async function importData(dataRows) {
+        let filename = $('#document_xml').val().split('\\').pop();
+
         let data = {
-            filename: $('#document_xml').val(),
+            filename: filename,
             mvtReasonId: $('#mvtReason').val(),
             rows: dataRows,
             ajax: 1,
@@ -200,43 +221,36 @@
         console.log(dataJson);
 
         if (dataJson.success) {
-            $.growl.notice({
-                'title': 'Importazione',
-                'message': dataJson.message
+            Swal.fire({
+                title: 'Importazione',
+                text: dataJson.message,
+                icon: 'success'
             })
         } else {
-            $.growl.error({
-                'title': 'Importazione',
-                'message': dataJson.message
+            Swal.fire({
+                title: 'Importazione',
+                text: dataJson.message,
+                icon: 'error'
             })
         }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         dataTable = $('#productTable').DataTable({
-            layout: {
-                topStart: {
-                    buttons: [{
-                        text: 'Importa',
-                        className: 'btn btn-primary',
-                        action: function(e, dt, button, config) {
-                            let dtData = dt.rows().data();
-                            let rowsData = [];
-                            $.each(dtData, function() {
-                                if (this.checkbox == 1) {
-                                    rowsData.push(this);
-                                }
-                            })
-                            importData(rowsData);
-                        }
-                    }]
-                }
-            },
+            pageLength: 10,
+            lengthMenu: [
+                [10, 20, 50, 100, 200, 500, -1],
+                [10, 20, 50, 100, 200, 500, "Tutti"]
+            ],
+            pageLength: -1,
+            paging: true,
+            searching: true,
+            ordering: true,
             order: [
                 [1, "asc"]
             ],
             language: {
-                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/lang/it_IT.json"
             },
             data: dataSource,
             columns: [{
@@ -286,11 +300,12 @@
                     title: 'Esiste',
                     data: 'exists',
                     defaultContent: false,
+                    className: 'dt-center',
                     render: function(data, type, row) {
                         if (data == 1) {
-                            return '<span class="text-success">Si</span>';
+                            return '<span class="text-success"><i class="fa fa-check"></i></span>';
                         } else {
-                            return '<span class="text-danger">No</span>';
+                            return '<span class="text-danger"><i class="fa fa-times"></i></span>';
                         }
                     }
                 },
@@ -304,6 +319,48 @@
                 });
             }
         });
+
+        $(document).on('click', '.btn-import', function(e) {
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
+            Swal.fire({
+                title: 'Conferma importazione?',
+                text: "Saranno importati i record selezionati!",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Si, importa!',
+                cancelButtonText: 'No, ho cambiato idea...'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let dtData = dataTable.rows().data();
+                    let rowsData = [];
+                    $.each(dtData, function() {
+                        if (this.checkbox == 1) {
+                            rowsData.push(this);
+                        }
+                    })
+
+                    Swal.fire({
+                        title: 'Attendere...',
+                        html: 'Sto importando i record selezionati...',
+                        icon: 'info',
+                        showCancelButton: false,
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        onBeforeOpen: () => {
+                            Swal.showLoading()
+                        }
+                    })
+
+                    importData(rowsData);
+                }
+            });
+
+            return false;
+        })
 
         $('#document_xml').on('change', function(event) {
             event.preventDefault();

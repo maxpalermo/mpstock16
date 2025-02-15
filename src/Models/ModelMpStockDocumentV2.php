@@ -41,7 +41,7 @@ class ModelMpStockDocumentV2 extends ObjectModel
         'fields' => [
             'id_shop' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => false],
             'number_document' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => false, 'size' => 255],
-            'date_document' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => false],
+            'date_document' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat', 'required' => false],
             'id_mpstock_mvt_reason' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
             'id_supplier' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => false],
             'tot_qty' => ['type' => self::TYPE_INT, 'validate' => 'isInt', 'required' => false],

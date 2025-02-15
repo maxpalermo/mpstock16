@@ -28,7 +28,7 @@
                 <div class="col-lg-12">
                     <div class="form-group">
                         <button type="button" class="btn btn-primary" id="btn-add-reason">
-                            <i class="process-icon-new"></i> {l s='Aggiungi ragione' mod='mpstockv2'}
+                            <i class="process-icon-new"></i> {l s='Nuovo tipo di movimento' mod='mpstockv2'}
                         </button>
                     </div>
                 </div>
@@ -155,7 +155,7 @@
                 [1, "asc"]
             ],
             language: {
-                "url": "/modules/mpstockv2/views/js/plugins/datatables/datatables-it.json"
+                "url": "/modules/mpstockv2/views/js/plugins/datatables/lang/it_IT.json"
             }
 
         });
@@ -180,10 +180,33 @@
                 success: function(data) {
                     if (data.success == true) {
                         reasonDatatable.ajax.reload(null, false);
-                        showSuccessGrowl(data.message);
+                        Swal.fire({
+                            title: 'Salva Tipo Movimento',
+                            text: data.message,
+                            icon: 'success',
+                            type: 'success',
+                            confirmButtonClass: 'btn btn-success',
+                            buttonsStyling: true
+                        });
                     } else {
-                        showErrorGrowl(data.message);
-                        showErrorGrowl(data.error);
+                        Swal.fire({
+                            title: 'Errore',
+                            text: data.message,
+                            icon: 'error',
+                            type: 'error',
+                            confirmButtonClass: 'btn btn-danger',
+                            buttonsStyling: true
+                        });
+                        if (data.error) {
+                            Swal.fire({
+                                title: 'Errore',
+                                text: data.error,
+                                icon: 'error',
+                                type: 'error',
+                                confirmButtonClass: 'btn btn-danger',
+                                buttonsStyling: true
+                            });
+                        }
                     }
                     $('#reason-modal').modal('hide');
                     $('#reason_name').val('');

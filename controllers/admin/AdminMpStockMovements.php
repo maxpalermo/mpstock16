@@ -64,6 +64,8 @@ class AdminMpStockMovementsController extends ModuleAdminController
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.css');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/toastify.js');
         $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/toastify/showToastify.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/swal2/swal2.js');
+        $this->addJS(_MODULE_DIR_ . 'mpstockv2/views/js/plugins/htmx/htmx.js');
         $this->addCSS(_MODULE_DIR_ . 'mpstockv2/views/css/style.css');
         $this->addJqueryPlugin('autocomplete');
         $this->addJqueryUI('ui.autocomplete');
@@ -96,7 +98,7 @@ class AdminMpStockMovementsController extends ModuleAdminController
     public function initContent()
     {
         $tpl = $this->context->smarty->createTemplate(
-            $this->getTemplatePath() . 'dataTables/movements.tpl',
+            $this->getTemplatePath() . 'movements/movements.tpl',
             $this->context->smarty
         );
 

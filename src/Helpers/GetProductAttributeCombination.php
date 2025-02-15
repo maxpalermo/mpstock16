@@ -43,15 +43,19 @@ class GetProductAttributeCombination
         return $combination;
     }
 
-    public static function getProductCombinations($id_product, $id_lang = null)
+    public static function getProductCombinations($id_product, $id_lang = null, $withTitles = false)
     {
         if (!$id_lang) {
             $id_lang = (int) \Context::getContext()->language->id;
         }
 
         $sql = new \DbQuery();
-        $sql->select('pa.id_product_attribute as value, GROUP_CONCAT(CONCAT(agl.name, ":", al.name) SEPARATOR ", ") as label')
-            ->from('product_attribute', 'pa')
+        if ($withTitles) {
+            $sql->select('pa.id_product_attribute as value, pa.ean13, pa.reference, GROUP_CONCAT(CONCAT(agl.name, ":", al.name) SEPARATOR ", ") as label');
+        } else {
+            $sql->select('pa.id_product_attribute as value, pa.ean13, pa.reference, GROUP_CONCAT(al.name SEPARATOR ", ") as label');
+        }
+        $sql->from('product_attribute', 'pa')
             ->leftJoin('product_attribute_combination', 'pac', 'pa.id_product_attribute = pac.id_product_attribute')
             ->leftJoin('attribute', 'a', 'pac.id_attribute = a.id_attribute')
             ->leftJoin('attribute_lang', 'al', 'a.id_attribute = al.id_attribute AND al.id_lang = ' . (int) $id_lang)
@@ -124,5 +128,58 @@ class GetProductAttributeCombination
         $query->where('pa.ean13 = \'' . pSQL($ean13) . '\'');
 
         return (int) \Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
+    }
+
+    public static function createOptions($id_product, $id_lang = null, $with_empty = true, $with_titles = false)
+    {
+        if (!$id_product) {
+            return [];
+        }
+
+        if (!$id_lang) {
+            $id_lang = (int) \Context::getContext()->language->id;
+        }
+
+        $combinations = self::getProductCombinations($id_product, $id_lang, $with_titles);
+        if (!$combinations) {
+            return [];
+        }
+
+        if ($combinations) {
+            $options = [];
+            $select_string = \Module::getInstanceByName('mpstockv2')->l('Seleziona', 'GetProductAttributeCombination');
+            if ($with_empty) {
+                $options[] = "
+                    <option value=''>
+                        {$select_string}
+                    </option>
+                    ";
+            }
+            foreach ($combinations as $combination) {
+                $options[] = "
+                        <option 
+                            value='{$combination['value']}'
+                            data-ean13='{$combination['ean13']}'
+                            data-reference='{$combination['reference']}'>
+                                {$combination['label']}
+                        </option>
+                        ";
+            }
+        } else {
+            $options = [];
+        }
+
+        return $options;
+    }
+
+    public static function getProductAttributeImages($id_product_attribute)
+    {
+        $db = \Db::getInstance();
+        $sql = new \DbQuery();
+        $sql->select('id_image')
+            ->from('product_attribute_image')
+            ->where('id_product_attribute=' . (int) $id_product_attribute);
+
+        return $db->ExecuteS($sql);
     }
 }

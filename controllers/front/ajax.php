@@ -131,10 +131,12 @@ class MpStockV2AjaxModuleFrontController extends ModuleFrontController
         );
     }
 
-    public function ajaxProcessSaveMvtReason()
+    public function ajaxProcessSaveDefaultMvtReasonsId()
     {
-        $id_mvt_reason = (int) Tools::getValue('mvtReasonId');
-        Configuration::updateValue(MpStockV2::MPSTOCKV2_MVT_REASON_ID, $id_mvt_reason);
+        $loadMvtId = (int) Tools::getValue('mvtLoadReasonId');
+        $unloadMvtId = (int) Tools::getValue('mvtUnloadReasonId');
+        MpStockV2::updateLoadMvtId($loadMvtId);
+        MpStockV2::updateUnloadMvtId($unloadMvtId);
         Response::json(
             [
                 'success' => true,
@@ -143,5 +145,97 @@ class MpStockV2AjaxModuleFrontController extends ModuleFrontController
                 'errors' => [],
             ]
         );
+    }
+
+    public function ajaxProcessZipSite()
+    {
+        $startTime = microtime(true);
+
+        $rootPath = _PS_ROOT_DIR_;
+        $archiveFile = $rootPath . '/backup.zip';
+
+        // Directories da escludere
+        $pathsToExclude = [
+            '.git',
+            '.svn',
+            'var/cache',
+            'var/logs',
+            'app/cache',
+            'app/logs',
+            'upload',
+            'download',
+            'img/tmp',
+            'img/p',  // cartella prodotti
+            'img/c',  // cartella categorie
+            'modules/themeconfigurator/img',
+            basename($archiveFile), // Esclude il file di backup stesso
+        ];
+
+        // Crea il pattern regex per l'esclusione in modo sicuro
+        $escapedPaths = array_map(function ($path) {
+            return preg_quote($path, '/');
+        }, $pathsToExclude);
+
+        $pattern = '/^(?!.*(' . implode('|', $escapedPaths) . '))/';
+
+        try {
+            $zip = new ZipArchive();
+            if ($zip->open($archiveFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+                throw new Exception('Impossibile creare il file ZIP');
+            }
+
+            // Funzione ricorsiva per aggiungere file
+            $addFilesToZip = function ($dir) use ($zip, $pattern, $rootPath, &$addFilesToZip) {
+                $files = new DirectoryIterator($dir);
+                foreach ($files as $file) {
+                    if ($file->isDot()) {
+                        continue;
+                    }
+
+                    $filePath = $file->getRealPath();
+                    $relativePath = substr($filePath, strlen($rootPath) + 1);
+
+                    if (!preg_match($pattern, $relativePath)) {
+                        continue;
+                    }
+
+                    if ($file->isDir()) {
+                        $addFilesToZip($filePath);
+                    } else {
+                        $zip->addFile($filePath, $relativePath);
+                    }
+                }
+            };
+
+            $addFilesToZip($rootPath);
+            $zip->close();
+
+            $endTime = microtime(true);
+            $duration = $endTime - $startTime;
+
+            // Converti la durata in formato HH:MM:SS
+            $hours = floor($duration / 3600);
+            $minutes = floor(($duration % 3600) / 60);
+            $seconds = floor($duration % 60);
+            $durationFormatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+
+            exit(json_encode([
+                'success' => true,
+                'message' => 'Backup creato con successo',
+                'archive' => $archiveFile,
+                'duration' => $durationFormatted,
+            ]));
+        } catch (Exception $e) {
+            if (isset($zip)) {
+                $zip->close();
+            }
+            if (file_exists($archiveFile)) {
+                unlink($archiveFile);
+            }
+            exit(json_encode([
+                'success' => false,
+                'message' => 'Errore durante la creazione del backup: ' . $e->getMessage(),
+            ]));
+        }
     }
 }

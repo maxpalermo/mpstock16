@@ -137,20 +137,26 @@
         event.preventDefault();
         event.stopPropagation();
         if (movement_sign == 0) {
-            $.growl.warning({
-                'title': '{l s='Warning' mod='mpstock'}',
-                'message': '{l s='Seleziona un movimento' mod='mpstock'}',
+            Swal.fire({
+                title: '{l s='Warning' mod='mpstock'}',
+                text: '{l s='Seleziona un movimento' mod='mpstock'}',
+                type: 'warning',
+                buttonsStyling: true,
+                confirmButtonClass: 'btn btn-success'
             });
             return false;
         }
         if ($('#ean13').val() == '') {
-            $.growl.warning({
-                'title': '{l s='Warning' mod='mpstock'}',
-                'message': '{l s='Seleziona un prodotto' mod='mpstock'}',
+            Swal.fire({
+                title: '{l s='Warning' mod='mpstock'}',
+                text: '{l s='Seleziona un prodotto' mod='mpstock'}',
+                type: 'warning',
+                buttonsStyling: true,
+                confirmButtonClass: 'btn btn-success'
             });
             return false;
         }
-        const product = {
+        const movement = {
             id_product: $('#id_product').val(),
             id_product_attribute: $('#id_product_attribute').val(),
             quantity: $('#quantity').val(),
@@ -163,20 +169,17 @@
             data: {
                 ajax: true,
                 action: 'addQuickMovement',
-                product: product
+                movement: movement
             },
             success: function(response) {
-                if (response.success) {
-                    $.growl.notice({
-                        'title': 'Salva Movimento',
-                        'message': response.message
-                    })
-                } else {
-                    $.growl.error({
-                        'title': 'Salva Movimento',
-                        'message': response.message
-                    })
-                }
+                Swal.fire({
+                    title: 'Salva Movimento',
+                    html: response.message,
+                    type: response.success ? 'success' : 'error',
+                    icon: response.success ? 'success' : 'error',
+                    buttonsStyling: true,
+                    confirmButtonClass: 'btn btn-success'
+                })
             },
             error: function(response) {
                 console.log(response);

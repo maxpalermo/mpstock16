@@ -26,7 +26,8 @@ require_once _PS_MODULE_DIR_ . 'mpstockv2/vendor/autoload.php';
 
 class MpStockV2 extends Module
 {
-    public const MPSTOCKV2_MVT_REASON_ID = 'MPSTOCKV2_MVT_REASON_ID';
+    public const MPSTOCK_DEFAULT_LOAD_MVT_ID = 'MPSTOCK_DEFAULT_LOAD_MVT_ID';
+    public const MPSTOCK_DEFAULT_UNLOAD_MVT_ID = 'MPSTOCK_DEFAULT_UNLOAD_MVT_ID';
     protected $config_form = false;
     protected $adminClassName = 'AdminMpStock';
     protected $id_lang;
@@ -111,6 +112,13 @@ class MpStockV2 extends Module
         /** @var ModuleAdminController */
         $controller = $this->context->controller;
         $controller->addCSS($this->getLocalPath() . 'views/css/icon-menu.css', 'all', 1001);
+
+        if ($controller->controller_name == 'AdminModules' || preg_match('/^AdminMp/', $controller->controller_name)) {
+            $controller->addJS($this->getLocalPath() . 'views/js/plugins/htmx/htmx.js');
+            $controller->addJS($this->getLocalPath() . 'views/js/plugins/swal2/swal2.js');
+            $controller->addCSS($this->getLocalPath() . 'views/css/fa-list.css', 'all', 1001);
+            $controller->addCSS($this->getLocalPath() . 'views/css/process-icon-list.css', 'all', 1002);
+        }
     }
 
     protected function updateMovement($orderDetail, $type = 'update')
@@ -174,7 +182,8 @@ class MpStockV2 extends Module
         $tpl = $this->context->smarty->createTemplate($tpl_path);
         $tpl->assign('link', $this->context->link);
         $tpl->assign('mvtReasons', $this->getMvtReasons());
-        $tpl->assign('mvtReasonId', Configuration::get(MpStockV2::MPSTOCKV2_MVT_REASON_ID));
+        $tpl->assign('mvtLoadReasonId', self::getLoadMvtId());
+        $tpl->assign('mvtUnloadReasonId', self::getUnloadMvtId());
         $content = $tpl->fetch();
 
         return $content;
@@ -183,5 +192,33 @@ class MpStockV2 extends Module
     public function getMvtReasons()
     {
         return ModelMpStockMvtReasonV2::getMvtReasons();
+    }
+
+    public static function updateLoadMvtId($value)
+    {
+        Configuration::updateValue(MpStockV2::MPSTOCK_DEFAULT_LOAD_MVT_ID, $value);
+    }
+
+    public static function updateUnloadMvtId($value)
+    {
+        Configuration::updateValue(MpStockV2::MPSTOCK_DEFAULT_UNLOAD_MVT_ID, $value);
+    }
+
+    public static function getConfig()
+    {
+        return [
+            'mvtLoadReasonId' => (int) Configuration::get(MpStockV2::MPSTOCK_DEFAULT_LOAD_MVT_ID),
+            'mvtUnloadReasonId' => (int) Configuration::get(MpStockV2::MPSTOCK_DEFAULT_UNLOAD_MVT_ID),
+        ];
+    }
+
+    public static function getLoadMvtId()
+    {
+        return (int) Configuration::get(MpStockV2::MPSTOCK_DEFAULT_LOAD_MVT_ID);
+    }
+
+    public static function getUnloadMvtId()
+    {
+        return (int) Configuration::get(MpStockV2::MPSTOCK_DEFAULT_UNLOAD_MVT_ID);
     }
 }
